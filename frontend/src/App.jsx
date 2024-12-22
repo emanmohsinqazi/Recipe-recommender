@@ -1,27 +1,30 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import GenerateRecipe from './pages/GenerateRecipe';
-import { AuthProvider } from './context/AuthContext';
-import { RecipeProvider } from './context/RecipeContext';
+import "./App.css";
+/* eslint-disable react/jsx-key */
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+} from "react-router-dom";
 
-function App() {
-  return (
-    <Router>
-      <AuthProvider>
-        <RecipeProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/generate" element={<GenerateRecipe />} />
-            </Routes>
-          </div>
-        </RecipeProvider>
-      </AuthProvider>
-    </Router>
-  );
-}
+import RootLayout from "./pages/RootLayout";
+import Home from "./pages/Home";
+import Shop from "./pages/pages/Shop";
+
+import RecipeGenerator from "./pages/RecipeGenerator";
+import Login from "./pages/Login";
+import Kitchen from "./pages/Kitchen";
+
+const App = createBrowserRouter(
+  createRoutesFromElements([
+    <Route path="/" element={<RootLayout />}>
+      [<Route path="/" element={<Home />}></Route>,
+      <Route path="/shop" element={<Shop />}></Route>,
+      <Route path="/login" element={<Login />}></Route>,
+      <Route path="/kitchen" element={<Kitchen />}></Route>,
+
+      <Route path="/generate" element={<RecipeGenerator />}></Route>, ]
+    </Route>,
+  ])
+);
 
 export default App;
