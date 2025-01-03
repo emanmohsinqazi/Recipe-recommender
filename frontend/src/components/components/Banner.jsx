@@ -4,6 +4,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
 export default function Banner() {
+  // eslint-disable-next-line no-unused-vars
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const settings = {
@@ -30,7 +31,7 @@ export default function Banner() {
               <p className="text-lg">www.rasa.com</p>
             </div>
             <div className="flex-1 flex justify-center">
-              <img src="/grocery-basket.png" alt="Grocery Basket" className="w-96" />
+              <img src="/banner.jpg" alt="Grocery Basket" className="w-96" />
             </div>
           </div>
         </div>

@@ -1,10 +1,21 @@
-import  { useState } from "react";
+
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Add your login/signup logic here
+    // For now, we'll just navigate to the home page
+    navigate('/');
   };
 
   return (
@@ -58,7 +69,7 @@ const Login = () => {
             </div>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
                 <div>
@@ -159,3 +170,4 @@ const Login = () => {
 };
 
 export default Login;
+
