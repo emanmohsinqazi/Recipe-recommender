@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // /* eslint-disable no-unused-vars */
 // import { Search, Heart, User } from "lucide-react";
 // import { Link } from "react-router-dom";
@@ -131,13 +132,13 @@
 
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Heart, User, Menu, X, Edit, LogOut } from 'lucide-react';
+import { Menu, X, Edit, LogOut } from 'lucide-react';
 import { Link } from "react-router-dom";
-import Button from "./components/ui/Button";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [isLoggedIn, setIsLoggedIn] = useState(false); // This should be replaced with your actual auth logic
   const userMenuRef = useRef(null);
 
