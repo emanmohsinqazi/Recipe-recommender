@@ -12,14 +12,14 @@ export const products = [
     name: 'Cauliflower 1 pc',
     price: 3,
     oldPrice: 4,
-    image: '/cauliflower.png',
+    image: '/cauliflower.jpg',
     category: 'vegetables',
   },
   {
     id: 3,
     name: 'Cilantro (2 Pc)',
     price: 0.98,
-    image: '/cilantro.png',
+    image: '/cilantro.webp',
     category: 'vegetables',
   },
   {
@@ -27,7 +27,7 @@ export const products = [
     name: 'Fresh Green Capsicum (500gm)',
     price: 3.29,
     oldPrice: 3.99,
-    image: '/capsicum.png',
+    image: '/capsicum.webp',
     category: 'vegetables',
   },
   // Add more products as needed

@@ -6,7 +6,7 @@ export const banners = [
     description: "Lorem ipsum dolor sit amet consectetur adipisicing elit.",
     website: "www.rasa.com",
     logoSrc: "/rasa-logo.png",
-    imageSrc: "/grocery-basket.png",
+    imageSrc: "/banner.jpg",
     bgColor: "bg-[#4CAF50]",
   },
   {
@@ -16,7 +16,7 @@ export const banners = [
     description: "Get fresh and organic vegetables delivered to your doorstep.",
     website: "www.rasa.com",
     logoSrc: "/rasa-logo.png",
-    imageSrc: "/vegetables-basket.png",
+    imageSrc: "/banner.png",
     bgColor: "bg-[#FF6B6B]",
   },
   {
@@ -26,7 +26,7 @@ export const banners = [
     description: "Start your day with fresh and healthy fruits.",
     website: "www.rasa.com",
     logoSrc: "/rasa-logo.png",
-    imageSrc: "/fruits-basket.png",
+    imageSrc: "/banner.jng",
     bgColor: "bg-[#4A90E2]",
   },
 ];

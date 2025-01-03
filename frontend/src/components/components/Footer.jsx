@@ -12,11 +12,11 @@ export default function Footer() {
         
         <div className="flex justify-center gap-8 mb-8">
           <a href="#" className="text-gray-600 hover:text-gray-900">About</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900">Careers</a>
+          {/* <a href="#" className="text-gray-600 hover:text-gray-900">Careers</a> */}
           <a href="#" className="text-gray-600 hover:text-gray-900">History</a>
           <a href="#" className="text-gray-600 hover:text-gray-900">Services</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900">Projects</a>
-          <a href="#" className="text-gray-600 hover:text-gray-900">Blog</a>
+          {/* <a href="#" className="text-gray-600 hover:text-gray-900">Projects</a> */}
+          {/* <a href="#" className="text-gray-600 hover:text-gray-900">Blog</a> */}
         </div>
         
         <div className="flex justify-center gap-6">
