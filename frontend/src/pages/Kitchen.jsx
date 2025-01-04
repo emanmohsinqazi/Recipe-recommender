@@ -1,7 +1,7 @@
-import  { useState } from 'react';
-import Header from '../components/KitchenComponents/Header';
-import AddItemForm from '../components/KitchenComponents/AddItemForm';
-import InventoryList from '../components/KitchenComponents/InventoryList';
+import  { useState } from "react";
+import Header from "../components/KitchenComponents/Header";
+import AddItemForm from "../components/KitchenComponents/AddItemForm";
+import InventoryList from "../components/KitchenComponents/InventoryList";
 
 function Kitchen() {
   const [items, setItems] = useState([]);
@@ -27,15 +27,15 @@ function Kitchen() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-5xl mx-auto py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <Header />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-1">
             <AddItemForm onAddItem={handleAddItem} />
           </div>
-          
+
           <div className="lg:col-span-2">
             <InventoryList
               items={items}

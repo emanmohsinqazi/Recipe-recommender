@@ -21,7 +21,6 @@ const App = createBrowserRouter(
       <Route path="/shop" element={<Shop />}></Route>,
       <Route path="/login" element={<Login />}></Route>,
       <Route path="/kitchen" element={<Kitchen />}></Route>,
-
       <Route path="/generate" element={<RecipeGenerator />}></Route>, ]
     </Route>,
   ])

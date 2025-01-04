@@ -1,10 +1,59 @@
-import  { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import axios from "axios";
+import {BASE_URL} from "../utils/constants";
+import { addUser } from "../utils/userSlice";
 
 const Login = () => {
+  const [emailId, setEmailId] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  // eslint-disable-next-line no-unused-vars
+  const [error, setError] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (isLogin) {
+      try {
+        const res = await axios.post(
+          BASE_URL + "/login",
+          {
+            email: emailId,
+            password: password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+        console.log(res);
+        dispatch(addUser(res.data));
+        return navigate("/");
+      } catch (err) {
+        setError(err?.response?.data || "Something went Wrong!d");
+        console.error(err);
+      }
+    } else {
+      try {
+        const res = await axios.post(
+          BASE_URL + "/signup",
+          { firstName, lastName, email: emailId, password },
+          { withCredentials: true }
+        );
+        dispatch(addUser(res.data.data));
+        return navigate("/");
+      } catch (err) {
+        setError(err?.response?.data || "Something went wrong");
+      }
+    }
   };
 
   return (
@@ -58,7 +107,7 @@ const Login = () => {
             </div>
           </div>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
                 <div>
@@ -69,6 +118,8 @@ const Login = () => {
                     First Name
                   </label>
                   <input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     type="text"
                     id="firstName"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -83,6 +134,8 @@ const Login = () => {
                     Last Name
                   </label>
                   <input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     type="text"
                     id="lastName"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -99,6 +152,8 @@ const Login = () => {
                 Email
               </label>
               <input
+                value={emailId}
+                onChange={(e) => setEmailId(e.target.value)}
                 type="email"
                 id="email"
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -113,13 +168,15 @@ const Login = () => {
                 Password
               </label>
               <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 type="password"
                 id="password"
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 placeholder="Enter your password"
               />
             </div>
-            {!isLogin && (
+            {/* {!isLogin && (
               <div>
                 <label
                   htmlFor="userImage"
@@ -134,7 +191,7 @@ const Login = () => {
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
-            )}
+            )} */}
             <button
               type="submit"
               className="w-full bg-olive-600 text-gray-600 py-2 rounded-md font-semibold hover:bg-olive-700 transition-colors duration-300"
