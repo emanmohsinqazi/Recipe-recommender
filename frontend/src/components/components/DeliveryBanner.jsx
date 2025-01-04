@@ -9,7 +9,7 @@ export default function DeliveryBanner() {
           </button>
         </div>
         <div>
-          <img src="/delivery-boy.png" alt="Delivery" className="h-64" />
+          {/* <img src="/delivery-boy.png" alt="Delivery" className="h-64" /> */}
         </div>
       </div>
     </div>
