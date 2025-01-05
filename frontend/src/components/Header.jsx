@@ -7,6 +7,7 @@ import { Menu, X, Edit, LogOut, User } from "lucide-react";
 import { removeUser } from "../utils/userSlice";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
+import {  toast } from 'react-toastify';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -39,6 +40,14 @@ const Header = () => {
       await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
       dispatch(removeUser());
       setIsUserMenuOpen(false);
+      toast.success("Logout Successfully", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
 
       navigate("/login"); // Use navigate to go to login page
     } catch (error) {
