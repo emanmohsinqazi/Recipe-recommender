@@ -36,21 +36,43 @@ kitchenRouter.get("/kitchen/items/:id", userAuth, async (req, res) => {
 });
 
 // POST new kitchen item
+// kitchenRouter.post("/kitchen/items", userAuth, async (req, res) => {
+//   try {
+//     const newItem = new KitchenItem({
+//       ...req.body,
+//       user: req.user._id,
+//     });
+
+//     const savedItem = await newItem.save();
+//     res.status(201).json(savedItem);
+//   } catch (error) {
+//     res
+//       .status(400)
+//       .json({ error: "Error creating kitchen item", details: error.message });
+//   }
+// });
+
 kitchenRouter.post("/kitchen/items", userAuth, async (req, res) => {
   try {
+    console.log("Request Body:", req.body);
+    console.log("Authenticated User ID:", req.user?._id);
+
     const newItem = new KitchenItem({
       ...req.body,
-      user: req.user._id,
+      user: req.user._id, // Ensure this is present
     });
 
     const savedItem = await newItem.save();
     res.status(201).json(savedItem);
   } catch (error) {
-    res
-      .status(400)
-      .json({ error: "Error creating kitchen item", details: error.message });
+    console.error("Error creating kitchen item:", error);
+    res.status(400).json({
+      error: "Error creating kitchen item",
+      details: error.message,
+    });
   }
 });
+
 
 // PATCH update kitchen item
 kitchenRouter.patch("/kitchen/items/:id", userAuth, async (req, res) => {
