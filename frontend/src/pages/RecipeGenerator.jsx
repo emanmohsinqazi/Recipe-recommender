@@ -121,13 +121,13 @@ const RecipeGenerator = () => {
               )}
             </div>
           ))}
-          <button
+          {/* <button
             type="button"
             onClick={addIngredient}
             className="mt-2 flex items-center text-blue-500 hover:text-blue-600"
           >
             <PlusCircle size={20} className="mr-1" /> Add Ingredient
-          </button>
+          </button> */}
         </div>
         <button
           type="submit"
