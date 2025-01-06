@@ -27,6 +27,7 @@
 // import { Plus, Minus } from 'lucide-react';
 
 // export default function CategoryGroup({ category, items, onUpdateQuantity }) {
+//   console.log(items);
 //   return (
 //     <div>
 //       <h3 className="text-xl font-semibold mb-3 text-gray-800">{category}</h3>
@@ -41,7 +42,7 @@
 //           </thead>
 //           <tbody className="bg-white divide-y divide-gray-200">
 //             {items.map((item) => (
-//               <tr key={item.id}>
+//               <tr key={item._id}>
 //                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
 //                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 //                   {item.quantity} {item.unit}
@@ -49,13 +50,13 @@
 //                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
 //                   <div className="flex items-center space-x-2">
 //                     <button
-//                       onClick={() => onUpdateQuantity(item.id, -1)}
+//                       onClick={() => onUpdateQuantity(item._id, -1)}
 //                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
 //                     >
 //                       <Minus className="w-5 h-5" />
 //                     </button>
 //                     <button
-//                       onClick={() => onUpdateQuantity(item.id, 1)}
+//                       onClick={() => onUpdateQuantity(item._id, 1)}
 //                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
 //                     >
 //                       <Plus className="w-5 h-5" />
@@ -79,6 +80,8 @@ import React from 'react';
 import { Plus, Minus, AlertTriangle } from 'lucide-react';
 
 export default function CategoryGroup({ category, items, onUpdateQuantity }) {
+  console.log(items);
+
   return (
     <div>
       <h3 className="text-xl font-semibold mb-3 text-gray-800">{category}</h3>
@@ -93,7 +96,7 @@ export default function CategoryGroup({ category, items, onUpdateQuantity }) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items.map((item) => (
-              <tr key={item.id}>
+              <tr key={item._id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <div className="flex items-center">
                     {item.name}
@@ -111,13 +114,13 @@ export default function CategoryGroup({ category, items, onUpdateQuantity }) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => onUpdateQuantity(item.id, -1)}
+                      onClick={() => onUpdateQuantity(item._id, -1)}
                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                       <Minus className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => onUpdateQuantity(item.id, 1)}
+                      onClick={() => onUpdateQuantity(item._id, 1)}
                       className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
                       <Plus className="w-5 h-5" />
