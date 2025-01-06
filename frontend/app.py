@@ -37,6 +37,17 @@ def vectorize_ingredients(ingredients, ingredient_index_map):
             vector[ingredient_index_map[ingredient]] = 1
     return vector
 
+# Find closest nutritional values in the dataset
+def find_closest_nutrition(scaled_values, scaler, dataset, nutritional_columns):
+    original_values = scaler.inverse_transform([scaled_values])  # Convert scaled to original
+    closest_values = {}
+
+    for col, original_value in zip(nutritional_columns, original_values[0]):
+        closest_value = dataset[col].iloc[(dataset[col] - original_value).abs().idxmin()]
+        closest_values[col] = int(round(closest_value))  # Ensure integer output
+
+    return closest_values
+
 # Recommendation function
 def recommend_recipes(input_ingredients, input_nutri, dataset, scaler, ingredient_index_map):
     # Vectorize input ingredients and nutrition data
@@ -62,7 +73,26 @@ def recommend_recipes(input_ingredients, input_nutri, dataset, scaler, ingredien
     )
 
     top_recipes = filtered_recipes.sort_values('score', ascending=False).head(5)
-    return top_recipes[['recipe_name', 'image_url', 'ingredients_list', 'ingredient_quantity_list']].to_dict('records')
+
+    # Nutritional column names
+    nutritional_columns = ['calories', 'fat', 'carbohydrates', 'protein', 'cholesterol', 'sodium', 'fiber']
+
+    # Format the output
+    recommendations = []
+    for _, row in top_recipes.iterrows():
+        # Find the closest integer values for nutrition in the dataset
+        scaled_nutrition = [row[col] for col in nutritional_columns]
+        nutrition = find_closest_nutrition(scaled_nutrition, scaler, dataset, nutritional_columns)
+        
+        recommendations.append({
+            'recipe_name': row['recipe_name'],
+            'image_url': row['image_url'],
+            'ingredients_list': row['ingredients_list'],
+            'ingredient_quantity_list': row['ingredient_quantity_list'],
+            'nutrition': nutrition  # Include nearest integer nutritional values
+        })
+
+    return recommendations
 
 # API endpoint
 @app.route('/api/recommend', methods=['POST'])
