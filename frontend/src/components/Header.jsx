@@ -186,7 +186,7 @@ const UserMenu = ({ mobile, handleLogout }) => (
     } bg-white rounded-md shadow-lg py-1 z-10`}
   >
     <Link
-      to="/edit-profile"
+      to="/profile"
       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
     >
       <Edit size={16} className="mr-2" />
