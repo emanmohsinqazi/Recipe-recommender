@@ -34,6 +34,10 @@ const userSchema = mongoose.Schema(
         }
       },
     },
+    age: {
+      type: Number,
+      min: 7,
+    },
 
     
     gender: {
@@ -48,10 +52,7 @@ const userSchema = mongoose.Schema(
         }
       },
     },
-    about: {
-      type: String,
-      default: "This is the default about the user",
-    },
+    
     
     photoUrl: {
       type: String,
