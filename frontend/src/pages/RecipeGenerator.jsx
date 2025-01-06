@@ -17,6 +17,7 @@ function App() {
 
   const handleInputChange = (e) => {
     setNutrition({ ...nutrition, [e.target.name]: e.target.value });
+    // console.log(nutrition);
   };
 
   const handleRecommend = async () => {
@@ -27,6 +28,7 @@ function App() {
         ingredients: inputIngredients,
         ...nutrition,
       });
+      console.log(response.data);
       setRecipes(response.data);
     } catch (err) {
       setError("Error fetching recommendations. Please try again.");

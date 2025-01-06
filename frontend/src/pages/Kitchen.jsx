@@ -1,55 +1,3 @@
-// import  { useState } from "react";
-// import Header from "../components/KitchenComponents/Header";
-// import AddItemForm from "../components/KitchenComponents/AddItemForm";
-// import InventoryList from "../components/KitchenComponents/InventoryList";
-
-// function Kitchen() {
-//   const [items, setItems] = useState([]);
-
-//   const handleAddItem = (newItem) => {
-//     setItems([
-//       ...items,
-//       {
-//         ...newItem,
-//         id: crypto.randomUUID(),
-//       },
-//     ]);
-//   };
-
-//   const handleUpdateQuantity = (id, change) => {
-//     setItems(
-//       items.map((item) =>
-//         item.id === id
-//           ? { ...item, quantity: Math.max(0, item.quantity + change) }
-//           : item
-//       )
-//     );
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-//       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-//         <Header />
-
-//         <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
-//           <div className="lg:col-span-1">
-//             <AddItemForm onAddItem={handleAddItem} />
-//           </div>
-
-//           <div className="lg:col-span-2">
-//             <InventoryList
-//               items={items}
-//               onUpdateQuantity={handleUpdateQuantity}
-//             />
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Kitchen;
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { AlertCircle } from "lucide-react";
@@ -59,7 +7,7 @@ import InventoryList from "../components/KitchenComponents/InventoryList";
 import { BASE_URL } from "../utils/constants";
 
 function Kitchen() {
-  const [items, setItems] = useState([]); // Initialize as an empty array
+  const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
 
   // Fetch items on component mount
@@ -116,22 +64,40 @@ function Kitchen() {
   const handleAddItem = (newItem) => {
     const item = {
       ...newItem,
-      id: crypto.randomUUID(), // Generate a unique ID
-      quantity: newItem.quantity || 0, // Ensure quantity is initialized
+
+      quantity: newItem.quantity || 0,
     };
 
     setItems((prevItems) => [...prevItems, item]); // Update the UI
     sendItemsToBackend(item); // Send the single item to the backend
   };
 
-  const handleUpdateQuantity = (id, change) => {
+  const handleUpdateQuantity = async (id, change) => {
+    console.log("Button Clicked->id: ", id);
+
     const updatedItems = items.map((item) =>
-      item.id === id
+      item._id === id
         ? { ...item, quantity: Math.max(0, item.quantity + change) }
         : item
     );
-    setItems(updatedItems);
-    sendItemsToBackend(updatedItems);
+
+    setItems(updatedItems); // Update the UI optimistically
+
+    const updatedItem = updatedItems.find((item) => item._id === id); // Find the specific updated item
+
+    try {
+      const endpoint =
+        change > 0
+          ? `/kitchen/items/${id}/increment`
+          : `/kitchen/items/${id}/decrement`;
+      await axios.patch(BASE_URL + endpoint, {}, { withCredentials: true });
+
+      // After the update, refetch the items to ensure the UI is in sync
+      fetchItems();
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      setError("Failed to update item quantity.");
+    }
   };
 
   return (

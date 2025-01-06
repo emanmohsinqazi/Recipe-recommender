@@ -226,7 +226,7 @@
 
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
@@ -592,6 +592,8 @@ const Login = () => {
             >
               {isLogin ? "Create an account" : "Login"}
             </button>
+          <Link to="/forgot-password" className="text-purple-600 hover:underline" >Forgot Password</Link>
+
           </p>
         </div>
       </div>

@@ -62,7 +62,7 @@ def recommend_recipes(input_ingredients, input_nutri, dataset, scaler, ingredien
     )
 
     top_recipes = filtered_recipes.sort_values('score', ascending=False).head(5)
-    return top_recipes[['recipe_name', 'image_url', 'ingredients_list', 'ingredient_quantity_list']].to_dict('records')
+    return top_recipes[['recipe_name', 'image_url', 'ingredients_list', 'ingredient_quantity_list','calories', 'fat', 'carbohydrates', 'protein', 'cholesterol', 'sodium', 'fiber']].to_dict('records')
 
 # API endpoint
 @app.route('/api/recommend', methods=['POST'])
