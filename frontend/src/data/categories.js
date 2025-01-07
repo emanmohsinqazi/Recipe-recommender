@@ -4,6 +4,6 @@ export const categories = [
   { id: 'dairy', name: 'Milk-Juice', icon: '🥛' },
   { id: 'bakery', name: 'Bakery', icon: '🥖' },
   { id: 'personal-care', name: 'Personal-Care', icon: '🧴' },
-  { id: 'grains', name: 'Grains', icon: '🌾' },
+  { id: 'spices', name: 'Grains', icon: '🌾' },
   { id: 'meat', name: 'Chicken & Egg', icon: '🥚' },
 ];
