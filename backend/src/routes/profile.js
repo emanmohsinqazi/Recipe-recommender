@@ -7,7 +7,7 @@ const { validateEditProfileData } = require("../utilis/helper.js");
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const user = req.user;
-    console.log(user);
+    // console.log(user);
     res.send(user);
   } catch (error) {
     res.status(500).send("Error" + res.error);

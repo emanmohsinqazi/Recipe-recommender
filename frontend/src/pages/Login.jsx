@@ -472,16 +472,16 @@ const Login = () => {
             </p>
           </div>
 
-          <button className="w-full bg-white text-gray-700 py-2 px-4 border border-gray-300 rounded-md flex items-center justify-center mb-4 hover:bg-gray-50 transition-colors duration-300">
+          {/* <button className="w-full bg-white text-gray-700 py-2 px-4 border border-gray-300 rounded-md flex items-center justify-center mb-4 hover:bg-gray-50 transition-colors duration-300">
             <img
               src="/google-image.png?height=20&width=20"
               alt="Google Icon"
               className="w-5 h-5 mr-2"
             />
             Continue with Google
-          </button>
+          </button> */}
 
-          <div className="relative my-6">
+          {/* <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
             </div>
@@ -490,7 +490,7 @@ const Login = () => {
                 Or {isLogin ? "sign in" : "sign up"} with Email
               </span>
             </div>
-          </div>
+          </div> */}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             {!isLogin && (
