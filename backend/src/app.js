@@ -15,10 +15,13 @@ app.use(cookieParser());
 const { authRouter } = require("./routes/auth.js");
 const { profileRouter } = require("./routes/profile.js");
 const {kitchenRouter}=require("./routes/kitchen.js")
+const {recipeRouter}=require("./routes/recipeRoute.js")
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", kitchenRouter);
+app.use("/", recipeRouter);
+
 
 
 
