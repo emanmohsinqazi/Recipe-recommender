@@ -3,11 +3,26 @@
 @tailwind utilities;
 
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-}
-
 body {
-  margin: 0;
-  min-width: 320px;
-}
+    background: #0f0f10;
+    color: #fff;
+  }
+  
+  input,
+  textarea {
+    color: #000;
+  }
+
+
+
+
+
+  
+
+
+
+
+
+
+
+   
