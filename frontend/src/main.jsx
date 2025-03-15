@@ -34,6 +34,8 @@ import PlaceOrder from "./pages/Orders/PlaceOrder.jsx";
 import OrderList from "./pages/Admin/orderList.jsx";
 import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
 import Kitchen from "./pages/Kitchen.jsx";
+import ChatBot from "./pages/ChatBot.jsx";
+import FavoriteRecipes from "./pages/FavoriteRecipes.jsx";
 
 
 const router = createBrowserRouter(
@@ -51,6 +53,8 @@ const router = createBrowserRouter(
         <Route path="/profile" element={<Profile />} />
         <Route path="/recipes" element={<Recipes/>}/>
         <Route path="/kitchen" element={<Kitchen/>}/>
+        <Route path="/chatbot" element={<ChatBot/>}/>
+        <Route path="/favorite" element={<FavoriteRecipes/>}/>
         
         {/* Order Process Flow */}
         <Route path="/shipping" element={<Shipping />} />
