@@ -33,6 +33,7 @@ import Checkout from "./pages/Orders/Checkout.jsx";
 import PlaceOrder from "./pages/Orders/PlaceOrder.jsx";
 import OrderList from "./pages/Admin/orderList.jsx";
 import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
+import Kitchen from "./pages/Kitchen.jsx";
 
 
 const router = createBrowserRouter(
@@ -49,6 +50,7 @@ const router = createBrowserRouter(
       <Route path="" element={<PrivateRoute />}>
         <Route path="/profile" element={<Profile />} />
         <Route path="/recipes" element={<Recipes/>}/>
+        <Route path="/kitchen" element={<Kitchen/>}/>
         
         {/* Order Process Flow */}
         <Route path="/shipping" element={<Shipping />} />
