@@ -19,7 +19,8 @@ const Login = () => {
   const { search } = useLocation();
   const sp = new URLSearchParams(search);
 
-  const redirect = sp.get("redirect") || "/home";
+  const defaultRedirect = userInfo?.isAdmin ? "/admin/dashboard" : "/home";
+  const redirect = sp.get("redirect") || defaultRedirect;
   
   console.log("Login component - Initial render");
   console.log("Login component - Redirect path:", redirect);
@@ -31,11 +32,12 @@ const Login = () => {
     
     if (userInfo) {
       console.log("Login component - User is authenticated, navigating to:", redirect);
-      navigate(redirect);
+      const targetPath = userInfo.isAdmin ? "/admin/dashboard" : "/home";
+      navigate(sp.get("redirect") || targetPath);
     } else {
       console.log("Login component - User not authenticated, staying on login page");
     }
-  }, [navigate, redirect, userInfo]);
+  }, [navigate, sp, userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -49,8 +51,9 @@ const Login = () => {
       console.log("Login component - Dispatching credentials to Redux store");
       dispatch(setCredentials({ ...res }));
       
-      console.log("Login component - Navigating to redirect path:", redirect);
-      navigate(redirect);
+      const targetPath = res.isAdmin ? "/admin/dashboard" : "/home";
+      console.log("Login component - Navigating to redirect path:", sp.get("redirect") || targetPath);
+      navigate(sp.get("redirect") || targetPath);
     } catch (err) {
       console.error("Login component - Login failed with error:", err);
       toast.error(err?.data?.message || err.error);
