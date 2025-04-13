@@ -1,85 +1,87 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
+import "./Chatbot.css";
 
+const Chatbot = () => {
+  const [userInput, setUserInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [isListening, setIsListening] = useState(false);
 
+  useEffect(() => {
+    if (!("webkitSpeechRecognition" in window)) {
+      console.log("Speech Recognition not supported in this browser");
+    }
+  }, []);
+  const handleSend = async () => {
+    if (!userInput.trim()) return;
+  
+    const newMessages = [...messages, { role: "user", content: userInput }];
+    setMessages(newMessages);
+  
+    try {
+      let response;
+  
+      if (userInput.toLowerCase().includes("calories in")) {
+        response = await axios.post("http://127.0.0.1:5000/get_calories", { meal: userInput.replace("calories in", "").trim() });
+      } else if (userInput.toLowerCase().includes("remaining calories")) {
+        response = await axios.post("http://127.0.0.1:5000/remaining_calories", { daily_limit: 2000, consumed: 1400 });
+      } else if (userInput.toLowerCase().includes("exercise")) {
+        const excessCalories = parseInt(userInput.match(/\d+/)) || 300;
+        response = await axios.post("http://127.0.0.1:5000/recommend_exercise", { excess_calories: excessCalories });
+      } else if (userInput.toLowerCase().includes("recipe")) {
+        const preference = userInput.replace("recipe", "").trim() || "healthy";
+        response = await axios.post("http://127.0.0.1:5000/suggest_recipe", { preference });
+      } else {
+        response = { data: { error: "Sorry, I don't understand that request." } };
+      }
+  
+      // ✅ Fix: Ensure the bot message is not appended twice
+      const botMessage = response.data.exercise || response.data.recipe || response.data.calories || response.data.error;
+      setMessages((prevMessages) => [...prevMessages, { role: "bot", content: botMessage }]);
+  
+    } catch (error) {
+      setMessages((prevMessages) => [...prevMessages, { role: "bot", content: "Error fetching response. Try again." }]);
+    }
+  
+    setUserInput("");
+  };
+  
 
+  const startListening = () => {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = "en-US";
+    recognition.start();
+    setIsListening(true);
 
-export default function ChatBot() {
- 
- 
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      setUserInput(speechResult);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Gradient background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900 z-0"></div>
-
-      {/* Animated dots pattern */}
-      <div className="fixed inset-0 opacity-30 z-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-          }}
-        ></div>
+    <motion.div className="chat-container" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <div className="chat-header">Nutrition & Fitness Chatbot</div>
+      <div className="chat-window">
+        {messages.map((msg, index) => (
+          <motion.div key={index} className={msg.role === "user" ? "user-msg" : "bot-msg"} initial={{ x: 100, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.3 }}>
+            <strong>{msg.role === "user" ? "You: " : "AI: "}</strong> {msg.content}
+          </motion.div>
+        ))}
       </div>
+      <div className="chat-input">
+        <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value)} placeholder="Ask about calories, exercise, or recipes..." />
+        <button onClick={handleSend}>Send</button>
+        <button onClick={startListening} disabled={isListening}>{isListening ? "Listening..." : "🎤 Voice"}</button>
+      </div>
+    </motion.div>
+  );
+};
 
-      {/* Main content */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <div className="max-w-md sm:max-w-lg md:max-w-2xl" style={{ animation: "fadeIn 0.6s ease-out forwards" }}>
-          {/* Logo */}
-          <div className="mx-auto mb-8 w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-            <span className="text-2xl font-bold">N</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300">
-            We're Coming Soon
-          </h1>
-
-          <p className="text-lg sm:text-xl text-gray-300 mb-10 max-w-xl mx-auto">
-            We're working on something amazing. Our new platform is on its way. Be the first to know when we launch.
-          </p>
-
-         
-        </div>
-      </main>
-
-    
-
-      {/* Inline styles */}
-      <style jsx>{`
-        /* Base styles */
-        :global(html),
-        :global(body) {
-          margin: 0;
-          padding: 0;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-            Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-        }
-
-        /* Custom scrollbar */
-        :global(::-webkit-scrollbar) {
-          width: 8px;
-        }
-
-        :global(::-webkit-scrollbar-track) {
-          background: #111;
-        }
-
-        :global(::-webkit-scrollbar-thumb) {
-          background: #333;
-          border-radius: 4px;
-        }
-
-        :global(::-webkit-scrollbar-thumb:hover) {
-          background: #444;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </div>
-  )
-}
-
+export default Chatbot;  

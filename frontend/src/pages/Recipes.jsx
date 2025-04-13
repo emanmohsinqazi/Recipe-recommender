@@ -1,251 +1,162 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { BASE_URL } from "../utils/constants";
+import { FaHeart } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
+function Recipes() {
+  const [ingredients, setIngredients] = useState("");
+  const [nutrition, setNutrition] = useState({
+    calories: 0,
+    fat: 0,
+    carbohydrates: 0,
+    protein: 0,
+    cholesterol: 0,
+    sodium: 0,
+    fiber: 0,
+  });
+  const [recipes, setRecipes] = useState([]);
+  const [error, setError] = useState("");
+  const [favorites, setFavorites] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-import { useState } from "react"
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (value < 0 || isNaN(value)) {
+      alert("Invalid value! Please enter a positive number.");
+    } else {
+      setNutrition({ ...nutrition, [name]: value });
+    }
+  };
 
-const RecipeCard = ({ recipe }) => (
-  <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1">
-    <img src={recipe.image || "/placeholder.svg"} alt={recipe.name} className="w-full h-48 object-cover" />
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">{recipe.name}</h2>
-      <p className="text-gray-300 mb-4">{recipe.description}</p>
-      <p className="text-sm text-gray-400 mb-4">Key Ingredients: {recipe.keyIngredients.join(", ")}</p>
-      <button
-        onClick={() => {
-          /* Navigate to recipe details */
-        }}
-        className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
-      >
-        More Details
-      </button>
-    </div>
-  </div>
-)
+  const handleRecommend = async () => {
+    try {
+      setError("");
+      const inputIngredients = ingredients.split(",").map((item) => item.trim());
+      const response = await axios.post("http://127.0.0.1:5000/api/recommend", {
+        ingredients: inputIngredients,
+        ...nutrition,
+      });
+      setRecipes(response.data);
+    } catch (err) {
+      setError("Error fetching recommendations. Please try again.");
+    }
+  };
 
-const Recipes = () => {
-  const [ingredients, setIngredients] = useState("")
-  const [dietaryConditions, setDietaryConditions] = useState("")
-  const [recipes, setRecipes] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  // Mock data for recipes
-  const mockRecipes = [
-    {
-      id: 1,
-      name: "Vegetable Stir Fry",
-      description: "A quick and healthy vegetable stir fry.",
-      image: "https://example.com/stir-fry.jpg",
-      keyIngredients: ["bell peppers", "broccoli", "carrots", "soy sauce"],
-    },
-    {
-      id: 2,
-      name: "Chicken Curry",
-      description: "A flavorful and creamy chicken curry.",
-      image: "https://example.com/chicken-curry.jpg",
-      keyIngredients: ["chicken", "coconut milk", "curry powder", "onions"],
-    },
-    {
-      id: 3,
-      name: "Quinoa Salad",
-      description: "A refreshing and nutritious quinoa salad.",
-      image: "https://example.com/quinoa-salad.jpg",
-      keyIngredients: ["quinoa", "cucumber", "tomatoes", "feta cheese"],
-    },
-    {
-      id: 4,
-      name: "Spaghetti Carbonara",
-      description: "A classic Italian pasta dish with a creamy egg sauce.",
-      image: "https://example.com/carbonara.jpg",
-      keyIngredients: ["spaghetti", "eggs", "pancetta", "parmesan cheese"],
-    },
-    {
-      id: 5,
-      name: "Vegetarian Chili",
-      description: "A hearty and spicy vegetarian chili.",
-      image: "https://example.com/veg-chili.jpg",
-      keyIngredients: ["beans", "tomatoes", "bell peppers", "onions", "chili powder"],
-    },
-  ]
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Filter recipes based on ingredients and dietary conditions
-    const filteredRecipes = mockRecipes.filter((recipe) => {
-      const hasIngredients = ingredients
-        .split(",")
-        .some((ingredient) =>
-          recipe.keyIngredients.some((key) => key.toLowerCase().includes(ingredient.trim().toLowerCase())),
-        )
-      const meetsDietaryConditions =
-        !dietaryConditions ||
-        recipe.keyIngredients.some((ingredient) => ingredient.toLowerCase().includes(dietaryConditions.toLowerCase()))
-      return hasIngredients && meetsDietaryConditions
-    })
-
-    setRecipes(filteredRecipes)
-    setLoading(false)
-  }
+  const handleRecipeClick = (recipe) => {
+    navigate(`/recipe/${encodeURIComponent(recipe.recipe_name)}`, {
+      state: { recipe },
+    });
+  };
 
   return (
-    <div className="flex-1 p-8 overflow-auto bg-[#0f0f10] text-white ml-[4%] xl:ml-[4%] lg:ml-[4%] md:ml-0 sm:ml-0">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Recipe Recommendations</h1>
+    <div className="min-h-screen flex items-center justify-center bg-black p-6">
+      <div className="w-full max-w-7xl flex flex-row-reverse gap-12">
+        {/* Form Section */}
+        <div className="w-2/5 bg-white p-10 rounded-lg shadow-xl">
+          <h1 className="text-4xl font-bold text-blue-500 mb-8 text-center">
+            Recipe Recommender
+          </h1>
 
-        <form onSubmit={handleSubmit} className="mb-12">
-          <div className="mb-4">
-            <label htmlFor="ingredients" className="block mb-2">
-              Ingredients
+          <div className="mb-6">
+            <label className="block font-semibold text-gray-700 mb-2">
+              Ingredients (comma-separated):
             </label>
             <input
               type="text"
-              id="ingredients"
               value={ingredients}
               onChange={(e) => setIngredients(e.target.value)}
-              className="w-full p-2 rounded bg-gray-800 text-white"
-              placeholder="Enter ingredients separated by commas"
+              className="border border-gray-300 p-4 w-full rounded bg-pink-200 text-gray-900"
             />
           </div>
-          <div className="mb-4">
-            <label htmlFor="dietaryConditions" className="block mb-2">
-              Dietary Conditions
-            </label>
-            <input
-              type="text"
-              id="dietaryConditions"
-              value={dietaryConditions}
-              onChange={(e) => setDietaryConditions(e.target.value)}
-              className="w-full p-2 rounded bg-gray-800 text-white"
-              placeholder="Enter dietary conditions"
-            />
-          </div>
-          <button
-            type="submit"
-            className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors w-full"
-            disabled={loading}
-          >
-            {loading ? "Searching..." : "Get Recommendations"}
-          </button>
-        </form>
 
-        {recipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} />
+          <div className="mb-6">
+            <h2 className="font-semibold text-gray-700 mb-4">
+              Desired Nutritional Values:
+            </h2>
+            {Object.keys(nutrition).map((key) => (
+              <div key={key} className="mb-4">
+                <label className="block font-semibold text-gray-700 mb-1">
+                  {key.charAt(0).toUpperCase() + key.slice(1)}:
+                </label>
+                <input
+                  type="number"
+                  name={key}
+                  value={nutrition[key]}
+                  onChange={handleInputChange}
+                  className="border border-gray-300 p-4 w-full rounded bg-pink-200 text-gray-900"
+                />
+              </div>
             ))}
           </div>
-        ) : (
-          <p className="text-center text-gray-400">
-            No recipes found. Try different ingredients or dietary conditions.
-          </p>
-        )}
+
+          <button
+            onClick={handleRecommend}
+            className="bg-blue-500 text-white py-3 px-5 rounded-lg hover:bg-blue-600 transition w-full text-lg"
+          >
+            Recommend Recipes
+          </button>
+        </div>
+
+        {/* Recipes Section */}
+        <div className="w-3/5">
+          <h2 className="text-2xl font-semibold mb-6 text-white text-center">
+            Recommended Recipes:
+          </h2>
+          {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
+          {recipes.length === 0 ? (
+            <p className="text-gray-400 text-center text-lg">
+              No recommendations available.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {recipes.map((recipe, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-2xl transition relative cursor-pointer"
+                  onClick={() => handleRecipeClick(recipe)}
+                >
+                  <button
+                    className="absolute top-4 right-4 text-2xl transition transform hover:scale-110"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFavorites((prev) =>
+                        prev.some((fav) => fav.recipe_name === recipe.recipe_name)
+                          ? prev.filter((fav) => fav.recipe_name !== recipe.recipe_name)
+                          : [...prev, recipe]
+                      );
+                    }}
+                  >
+                    <FaHeart
+                      className={
+                        favorites.some((fav) => fav.recipe_name === recipe.recipe_name)
+                          ? "text-red-500"
+                          : "text-gray-400"
+                      }
+                    />
+                  </button>
+
+                  <h3 className="text-xl font-bold text-white mb-3">
+                    {recipe.recipe_name}
+                  </h3>
+                  {recipe.image_url && (
+                    <img
+                      src={recipe.image_url}
+                      alt={recipe.recipe_name}
+                      className="mt-4 rounded-lg"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Recipes
-
-
-
-
-
-
-// import { useState } from "react";
-
-// const RecipeCard = ({ recipe }) => (
-//   <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1">
-//     <img src={recipe.image || "/placeholder.svg"} alt={recipe.name} className="w-full h-48 object-cover" />
-//     <div className="p-4">
-//       <h2 className="text-xl font-bold mb-2">{recipe.name}</h2>
-//       <p className="text-gray-300 mb-4">{recipe.description}</p>
-//       <p className="text-sm text-gray-400 mb-4">Key Ingredients: {recipe.keyIngredients.join(", ")}</p>
-//     </div>
-//   </div>
-// );
-
-// const Recipes = () => {
-//   const [inputs, setInputs] = useState({
-//     calories: "",
-//     fat: "",
-//     carbohydrates: "",
-//     protein: "",
-//     cholesterol: "",
-//     sodium: "",
-//     fiber: "",
-//   });
-//   const [recipes, setRecipes] = useState([]);
-//   const [loading, setLoading] = useState(false);
-
-//   const handleChange = (e) => {
-//     setInputs({ ...inputs, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-
-//     try {
-//       const response = await fetch(`${BASE_URL}/api/recommend`, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify(inputs),
-//       });
-      
-//       const data = await response.json();
-//       setRecipes(data.recipes || []);
-//     } catch (error) {
-//       console.error("Error fetching recipes:", error);
-//     }
-    
-//     setLoading(false);
-//   };
-
-//   return (
-//     <div className="p-8 bg-[#0f0f10] text-white">
-//       <h1 className="text-4xl font-bold mb-8 text-center">Recipe Recommendations</h1>
-//       <form onSubmit={handleSubmit} className="mb-12">
-//         {Object.keys(inputs).map((key) => (
-//           <div className="mb-4" key={key}>
-//             <label htmlFor={key} className="block mb-2 capitalize">{key}</label>
-//             <input
-//               type="text"
-//               id={key}
-//               name={key}
-//               value={inputs[key]}
-//               onChange={handleChange}
-//               className="w-full p-2 rounded bg-gray-800 text-white"
-//               placeholder={`Enter ${key}`}
-//             />
-//           </div>
-//         ))}
-//         <button
-//           type="submit"
-//           className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors w-full"
-//           disabled={loading}
-//         >
-//           {loading ? "Searching..." : "Get Recommendations"}
-//         </button>
-//       </form>
-//       {recipes.length > 0 ? (
-//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-//           {recipes.map((recipe, index) => (
-//             <RecipeCard key={index} recipe={recipe} />
-//           ))}
-//         </div>
-//       ) : (
-//         <p className="text-center text-gray-400">No recipes found.</p>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Recipes;
-
-
-
-
-
+export default Recipes;
