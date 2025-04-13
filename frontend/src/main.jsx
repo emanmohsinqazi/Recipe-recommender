@@ -27,6 +27,7 @@ import Cart from "./pages/Cart.jsx";
 import Shop from "./pages/Shop.jsx";
 import ProductDetails from "./pages/Products/ProductDetails.jsx";
 import Recipes from "./pages/Recipes.jsx";
+import RecipeDetails from "./pages/RecipeDetails.jsx"; // ✅ Added RecipeDetails page
 import Shipping from "./pages/Orders/Shipping.jsx";
 import Order from "./pages/Orders/Order.jsx";
 import Checkout from "./pages/Orders/Checkout.jsx";
@@ -37,13 +38,12 @@ import Kitchen from "./pages/Kitchen.jsx";
 import ChatBot from "./pages/ChatBot.jsx";
 import FavoriteRecipes from "./pages/FavoriteRecipes.jsx";
 
-
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="/home" element={<Home/>}/>
+      <Route path="/home" element={<Home />} />
       <Route path="/cart" element={<Cart />} />
-      <Route path="/shop" element={<Shop />} /> 
+      <Route path="/shop" element={<Shop />} />
       <Route path="/product/:id" element={<ProductDetails />} />
       
       <Route path="/login" element={<Login />} />
@@ -51,30 +51,29 @@ const router = createBrowserRouter(
 
       <Route path="" element={<PrivateRoute />}>
         <Route path="/profile" element={<Profile />} />
-        <Route path="/recipes" element={<Recipes/>}/>
-        <Route path="/kitchen" element={<Kitchen/>}/>
-        <Route path="/chatbot" element={<ChatBot/>}/>
-        <Route path="/favorite" element={<FavoriteRecipes/>}/>
-        
+        <Route path="/recipes" element={<Recipes />} />
+        <Route path="/recipe/:id" element={<RecipeDetails />} /> {/* ✅ Added new route */}
+        <Route path="/kitchen" element={<Kitchen />} />
+        <Route path="/chatbot" element={<ChatBot />} />
+        <Route path="/favorite" element={<FavoriteRecipes />} />
+
         {/* Order Process Flow */}
         <Route path="/shipping" element={<Shipping />} />
-        <Route path="/checkout" element={<Checkout />}/>
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/placeorder" element={<PlaceOrder />} />
         <Route path="/order/:id" element={<Order />} />
       </Route>
 
-
-      <Route path="/admin" element={<AdminRoute />} >
-      <Route path="userlist" element={<UserList/>}/>
-      <Route path="categorylist" element={<CategoryList/>}/>
-      <Route path="orderlist" element={<OrderList />} />
-      <Route path="productlist" element={<ProductList />} />
+      <Route path="/admin" element={<AdminRoute />}>
+        <Route path="userlist" element={<UserList />} />
+        <Route path="categorylist" element={<CategoryList />} />
+        <Route path="orderlist" element={<OrderList />} />
+        <Route path="productlist" element={<ProductList />} />
         <Route path="allproductslist" element={<AllProducts />} />
         <Route path="productlist/:pageNumber" element={<ProductList />} />
         <Route path="product/update/:_id" element={<ProductUpdate />} />
         <Route path="dashboard" element={<AdminDashboard />} />
       </Route>
-     
     </Route>
   )
 );
