@@ -1,319 +1,432 @@
-import { Link, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import Message from "../../components/Message";
-import Loader from "../../components/Loader";
-import CreditCard from "../../components/CreditCard";
-import {
-  useDeliverOrderMutation,
-  useGetOrderDetailsQuery,
-  usePayOrderMutation,
-} from "../../redux/api/orderApiSlice";
+"use client"
+
+import { Link, useParams } from "react-router-dom"
+import { useSelector } from "react-redux"
+import { useEffect } from "react"
+import { toast } from "react-toastify"
+import Message from "../../components/Message"
+import Loader from "../../components/Loader"
+import { useDeliverOrderMutation, useGetOrderDetailsQuery } from "../../redux/api/orderApiSlice"
 
 const Order = () => {
-  const { id: orderId } = useParams();
+  const { id: orderId } = useParams()
   const {
     data: order,
     refetch,
     isLoading,
     error,
-  } = useGetOrderDetailsQuery(orderId);
-  const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
-  const [deliverOrder, { isLoading: loadingDeliver }] =
-    useDeliverOrderMutation();
-  const { userInfo } = useSelector((state) => state.auth);
+    fulfilledTimeStamp, // Track when query last fulfilled
+  } = useGetOrderDetailsQuery(orderId, {
+    // No need for polling interval here as we'll handle it in useEffect
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  })
+  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation()
+  const { userInfo } = useSelector((state) => state.auth)
 
-  const handlePaymentSuccess = async (cardData) => {
-    try {
-      await payOrder({
-        orderId,
-        details: {
-          id: Date.now().toString(), // Generate a unique ID
-          status: "COMPLETED",
-          update_time: new Date().toISOString(),
-          payer: {
-            email_address: userInfo.email,
-            name: cardData.name,
-            payment_method: "Credit Card",
-          },
-          card: {
-            last4: cardData.number.slice(-4),
-            brand: "Credit Card",
-            expiry: cardData.expiry,
-          },
-        },
-      });
-      refetch();
-      toast.success("Payment successful!");
-    } catch (error) {
-      toast.error(error?.data?.message || error.message);
+  // Check if this order was just placed (within last 30 seconds)
+  const isRecentOrder = order?.createdAt && new Date() - new Date(order.createdAt) < 30000
+
+  // Check if we have payment data from sessionStorage (from order creation)
+  const lastOrderId = sessionStorage.getItem("lastOrderId")
+  const isLastOrder = lastOrderId === orderId
+
+  // Validate payment status immediately upon component mount and periodically thereafter
+  useEffect(() => {
+    // Always fetch initially to get the latest data
+    const validateOrderStatus = async () => {
+      try {
+        // Refetch to get latest data
+        await refetch()
+
+        // Handle case where payment might not be reflected despite being processed
+        if (order && !order.isPaid && isLastOrder) {
+          console.log("Detected order from previous checkout. Validating payment status...")
+
+          // Force an additional refetch after a short delay to ensure backend processing completed
+          setTimeout(() => {
+            refetch().catch((err) => {
+              console.error("Error refreshing order status:", err)
+            })
+          }, 2000)
+        }
+      } catch (err) {
+        console.error("Error validating order status:", err)
+      }
     }
-  };
 
-  // const handleCreditCardSubmit = (cardData) => {
-  //   // Basic validation for credit card data
-  //   if (!cardData || !cardData.number || !cardData.expiry || !cardData.cvc || !cardData.name) {
-  //     toast.error("Please provide all required card information");
-  //     return;
-  //   }
+    // Run validation immediately
+    validateOrderStatus()
 
-  //   // Card number validation (simple Luhn algorithm check)
-  //   const isCardNumberValid = validateCardNumber(cardData.number.replace(/\s/g, ''));
-  //   if (!isCardNumberValid) {
-  //     toast.error("Invalid card number");
-  //     return;
-  //   }
+    let intervalId
 
-  //   // Check expiry date
-  //   const [month, year] = cardData.expiry.split('/');
-  //   const expiryDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
-  //   const currentDate = new Date();
+    // Set up an interval to check payment status
+    if (order) {
+      // Different polling frequencies based on payment status and order age
+      if (!order.isPaid) {
+        // For unpaid orders, check more frequently initially
+        const orderAge = order.createdAt ? new Date() - new Date(order.createdAt) : 0
 
-  //   if (expiryDate < currentDate) {
-  //     toast.error("Card has expired");
-  //     return;
-  //   }
+        // Determine check frequency based on order age
+        let checkFrequency = 5000 // Default: 5 seconds
 
-  //   // Show loading indicator
-  //   toast.info("Processing payment...");
+        if (isLastOrder || orderAge < 60000) {
+          // Recently placed order or less than 1 minute old: check every 2 seconds
+          checkFrequency = 2000
+        } else if (orderAge > 180000) {
+          // More than 3 minutes old: check every 30 seconds
+          checkFrequency = 30000
+        }
 
-  //   // Simulate network delay for realism
-  //   setTimeout(() => {
-  //     // Simulate successful payment
-  //     const paymentResult = {
-  //       id: `sim_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
-  //       status: "COMPLETED",
-  //       update_time: new Date().toISOString(),
-  //       payer: {
-  //         email_address: userInfo.email,
-  //         name: cardData.name,
-  //         last4: cardData.number.slice(-4),
-  //         card_type: getCardType(cardData.number)
-  //       }
-  //     };
-
-  //     // Process the successful payment
-  //     handlePaymentSuccess(paymentResult);
-  //   }, 1500);
-  // };
-
-  // Replace PayPal/Stripe payment section with custom Credit Card component
-
-  const handleCreditCardSubmit = (cardData) => {
-    // Show loading state
-    const toastId = toast.loading("Processing your payment...");
-
-    try {
-      // Additional validation beyond the basic form validation
-
-      // 1. Check if card is expired
-      const [month, year] = cardData.expiry.split("/");
-      const expiryDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
-      const currentDate = new Date();
-
-      if (expiryDate < currentDate) {
-        toast.update(toastId, {
-          render: "Card has expired",
-          type: "error",
-          isLoading: false,
-          autoClose: 5000,
-        });
-        return;
+        console.log(`Setting payment check interval: ${checkFrequency}ms`)
+        intervalId = setInterval(() => {
+          refetch().catch((err) => {
+            console.error("Error refreshing order status:", err)
+          })
+        }, checkFrequency)
+      } else {
+        // For paid orders, just check occasionally for delivery status updates
+        intervalId = setInterval(() => {
+          refetch().catch((err) => {
+            console.error("Error refreshing order status:", err)
+          })
+        }, 30000)
+      }
+    }
+    // Clean up interval on unmount or when status changes
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId)
       }
 
-      // 2. Basic card type validation
-      const cardNumber = cardData.number.replace(/\s/g, "");
-      let cardType = "unknown";
+      // Clear lastOrderId from sessionStorage if this order is now paid
+      if (order?.isPaid && lastOrderId === orderId) {
+        sessionStorage.removeItem("lastOrderId")
+      }
+    }
+  }, [order?.isPaid, orderId, refetch, isLastOrder, lastOrderId, order?.createdAt])
 
-      if (/^4/.test(cardNumber)) cardType = "visa";
-      else if (/^5[1-5]/.test(cardNumber)) cardType = "mastercard";
-      else if (/^3[47]/.test(cardNumber)) cardType = "amex";
-      else if (/^6(?:011|5)/.test(cardNumber)) cardType = "discover";
+  // Payment is handled during order creation, so no separate payment handling is needed here
 
-      // 3. Create a payment result object
-      const paymentResult = {
-        id: `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        status: "COMPLETED",
-        update_time: new Date().toISOString(),
-        payer: {
-          email_address: userInfo.email,
-          name: cardData.name,
-          card_info: {
-            last4: cardNumber.slice(-4),
-            brand: cardType,
-            exp_month: month,
-            exp_year: year,
-          },
-        },
-      };
+  // Deliver order handler with improved synchronization
+  const deliverHandler = async () => {
+    const toastId = toast.loading("Updating delivery status...")
 
-      // 4. Simulate network delay for a more realistic experience
-      setTimeout(() => {
-        // Update toast to success
-        toast.update(toastId, {
-          render: "Payment processed successfully!",
-          type: "success",
-          isLoading: false,
-          autoClose: 3000,
-        });
+    try {
+      await deliverOrder(orderId).unwrap()
 
-        // Call the payment success handler
-        handlePaymentSuccess(paymentResult);
-      }, 1500);
-    } catch (error) {
-      // Handle any errors
+      // Immediately refetch to ensure UI is in sync with server
+      await refetch()
+
+      // Update toast to success
       toast.update(toastId, {
-        render: `Payment processing error: ${error.message || "Unknown error"}`,
+        render: "Order marked as delivered",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      })
+
+      // Force a refetch after a short delay to ensure any server-side processing completes
+      setTimeout(() => {
+        refetch()
+      }, 2000)
+    } catch (error) {
+      // Update toast to show error
+      toast.update(toastId, {
+        render: error?.data?.message || error.message || "Failed to update delivery status",
         type: "error",
         isLoading: false,
         autoClose: 5000,
-      });
-      console.error("Payment error:", error);
+      })
     }
-  };
-
-  const renderPaymentSection = () => {
-    if (!order) return null;
-
-    if (order.isPaid) {
-      return <Message variant="success">Paid on {order.paidAt}</Message>;
-    }
-
-    return (
-      <div>
-        {loadingPay && <Loader />}
-        <CreditCard onSubmit={handleCreditCardSubmit} />
-      </div>
-    );
-  };
-
-  // Deliver order handler remains the same
-  const deliverHandler = async () => {
-    try {
-      await deliverOrder(orderId);
-      refetch();
-      toast.success("Order delivered");
-    } catch (error) {
-      toast.error(error?.data?.message || error.message);
-    }
-  };
+  }
 
   return isLoading ? (
-    <Loader />
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
+      <Loader />
+    </div>
   ) : error ? (
-    <Message variant="danger">{error}</Message>
-  ) : (
-    <div className="container mx-auto mt-8">
-      <h1 className="text-2xl font-semibold mb-4">Order {order._id}</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <div className="border-b pb-4 mb-4">
-            <h2 className="text-xl font-semibold mb-2">Shipping</h2>
-            <p>
-              <strong>Name: </strong> {order.user.name}
-            </p>
-            <p>
-              <strong>Email: </strong> {order.user.email}
-            </p>
-            <p>
-              <strong>Address: </strong> {order.shippingAddress.address},{" "}
-              {order.shippingAddress.city} {order.shippingAddress.postalCode},{" "}
-              {order.shippingAddress.country}
-            </p>
-            {order.isDelivered ? (
-              <Message variant="success">
-                Delivered on {order.deliveredAt}
-              </Message>
-            ) : (
-              <Message variant="danger">Not Delivered</Message>
-            )}
-          </div>
-
-          <div className="border-b pb-4 mb-4">
-            <h2 className="text-xl font-semibold mb-2">Payment Method</h2>
-            <p>
-              <strong>Method: </strong> {order.paymentMethod}
-            </p>
-            {order.isPaid ? (
-              <Message variant="success">Paid on {order.paidAt}</Message>
-            ) : (
-              <Message variant="danger">Not Paid</Message>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold mb-2">Order Items</h2>
-            {order.orderItems.length === 0 ? (
-              <Message>Order is empty</Message>
-            ) : (
-              <div>
-                {order.orderItems.map((item, index) => (
-                  <div key={index} className="border-b pb-4 mb-4 flex">
-                    <div className="w-20 mr-4">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-auto"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Link
-                        to={`/product/${item.product}`}
-                        className="text-pink-500 hover:underline"
-                      >
-                        {item.name}
-                      </Link>
-                      <p>
-                        {item.qty} x ${item.price} = ${item.qty * item.price}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="min-h-screen py-8 px-4" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+      <div className="container mx-auto max-w-6xl">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+          <Message variant="error">{error}</Message>
         </div>
+      </div>
+    </div>
+  ) : (
+    <div className="min-h-screen py-8 px-4" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+      <div className="container mx-auto max-w-6xl">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Order {order._id}</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column - Order Details */}
+          <div className="space-y-6">
+            {/* Shipping Information */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Shipping</h2>
+              <div className="space-y-2 mb-4">
+                <p className="text-gray-700">
+                  <strong>Name: </strong> {order.user.name}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Email: </strong> {order.user.email}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Address: </strong> {order.shippingAddress.address}, {order.shippingAddress.city}{" "}
+                  {order.shippingAddress.postalCode}, {order.shippingAddress.country}
+                </p>
+              </div>
+              {order.isDelivered ? (
+                <Message variant="success">Delivered on {new Date(order.deliveredAt).toLocaleString()}</Message>
+              ) : (
+                <Message variant="error">Not Delivered</Message>
+              )}
+            </div>
 
-        <div className="bg-[#181818] p-6 rounded">
-          <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-          <div className="space-y-2 border-b pb-4 mb-4">
-            <div className="flex justify-between">
-              <span>Items</span>
-              <span>${order.itemsPrice}</span>
+            {/* Payment Method */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Payment Method</h2>
+              <p className="text-gray-700 mb-4">
+                <strong>Method: </strong> {order.paymentMethod}
+              </p>
+              {order.isPaid ? (
+                <div>
+                  <Message variant="success">
+                    <div className="font-semibold">Payment Confirmed</div>
+                    <div>
+                      Completed on{" "}
+                      {new Date(order.paidAt).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </Message>
+                  {order.paymentResult && (
+                    <div className="mt-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <h3 className="font-semibold text-gray-800 mb-2">Payment Details</h3>
+                      <p className="mb-1 text-gray-700">
+                        <strong>Transaction ID:</strong> {order.paymentResult.id || "N/A"}
+                      </p>
+                      <p className="mb-1 text-gray-700">
+                        <strong>Status:</strong>
+                        <span className="text-green-600 font-semibold ml-1">
+                          {order.paymentResult.status || "Completed"}
+                        </span>
+                      </p>
+                      {order.paymentResult.card?.last4 && (
+                        <p className="mb-1 text-gray-700">
+                          <strong>Card:</strong> •••• {order.paymentResult.card.last4}
+                        </p>
+                      )}
+                      {order.paymentResult.email_address && (
+                        <p className="mb-1 text-gray-700">
+                          <strong>Email:</strong> {order.paymentResult.email_address}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  {/* Different message based on how long we've been waiting */}
+                  {(() => {
+                    const orderAge = order.createdAt ? new Date() - new Date(order.createdAt) : 0
+
+                    // Special message for orders that were just placed and should be paid
+                    if (isLastOrder && orderAge < 30000) {
+                      return (
+                        <Message variant="info">
+                          <div className="font-semibold">Payment Confirmation in Progress</div>
+                          <div>
+                            Your payment was processed when you placed this order. The system is now finalizing your
+                            payment records.
+                          </div>
+                        </Message>
+                      )
+                    } else if (orderAge < 30000) {
+                      return (
+                        <Message variant="info">
+                          <div className="font-semibold">Payment Processing</div>
+                          <div>Your payment is being processed. This typically takes less than a minute.</div>
+                        </Message>
+                      )
+                    } else if (orderAge < 120000) {
+                      return (
+                        <Message variant="info">
+                          <div className="font-semibold">Payment Verification in Progress</div>
+                          <div>
+                            Your payment is being verified with the payment processor. This may take a few moments.
+                          </div>
+                        </Message>
+                      )
+                    } else {
+                      return (
+                        <Message variant="warning">
+                          <div className="font-semibold">Payment Status Delayed</div>
+                          <div>
+                            Payment is taking longer than expected. This may be due to processing delays. Use the
+                            refresh button below to check the latest status.
+                          </div>
+                        </Message>
+                      )
+                    }
+                  })()}
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    <button
+                      onClick={async () => {
+                        const toastId = toast.loading("Checking latest payment status...")
+                        try {
+                          await refetch()
+
+                          if (order.isPaid) {
+                            toast.update(toastId, {
+                              render: "Payment confirmed! Order is now paid.",
+                              type: "success",
+                              isLoading: false,
+                              autoClose: 2000,
+                            })
+                          } else {
+                            toast.update(toastId, {
+                              render: "Status updated - Payment still processing",
+                              type: "info",
+                              isLoading: false,
+                              autoClose: 2000,
+                            })
+                          }
+                        } catch (err) {
+                          toast.update(toastId, {
+                            render: "Error checking payment status. Please try again.",
+                            type: "error",
+                            isLoading: false,
+                            autoClose: 3000,
+                          })
+                        }
+                      }}
+                      className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-2 px-4 rounded-lg text-sm flex items-center justify-center shadow-md"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Refresh Payment Status
+                    </button>
+
+                    {/* Only show Contact Support if order is over 2 minutes old */}
+                    {order?.createdAt && new Date() - new Date(order.createdAt) > 120000 && (
+                      <button
+                        onClick={() => (window.location.href = "/contact")}
+                        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-2 px-4 rounded-lg text-sm flex items-center justify-center shadow-md"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                          />
+                        </svg>
+                        Contact Support
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>${order.shippingPrice}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tax</span>
-              <span>${order.taxPrice}</span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Total</span>
-              <span>${order.totalPrice}</span>
+
+            {/* Order Items */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Order Items</h2>
+              {order.orderItems.length === 0 ? (
+                <Message>Order is empty</Message>
+              ) : (
+                <div className="space-y-4">
+                  {order.orderItems.map((item, index) => (
+                    <div key={index} className="flex border-b border-gray-200 pb-4">
+                      <div className="w-20 mr-4">
+                        <img
+                          src={item.image || "/placeholder.svg"}
+                          alt={item.name}
+                          className="w-full h-auto rounded-md border border-gray-200"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Link
+                          to={`/product/${item.product}`}
+                          className="text-indigo-600 hover:text-indigo-800 font-medium"
+                        >
+                          {item.name}
+                        </Link>
+                        <p className="text-gray-700 mt-1">
+                          {item.qty} x ${item.price} = ${item.qty * item.price}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {!order.isPaid && renderPaymentSection()}
+          {/* Right Column - Order Summary */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg h-fit">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
+            <div className="space-y-3 border-b border-gray-200 pb-4 mb-4">
+              <div className="flex justify-between">
+                <span className="text-gray-700">Items</span>
+                <span className="text-gray-800 font-medium">${order.itemsPrice}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">Shipping</span>
+                <span className="text-gray-800 font-medium">${order.shippingPrice}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-700">Tax</span>
+                <span className="text-gray-800 font-medium">${order.taxPrice}</span>
+              </div>
+              <div className="flex justify-between font-bold text-lg pt-2">
+                <span className="text-gray-800">Total</span>
+                <span className="text-gray-800">${order.totalPrice}</span>
+              </div>
+            </div>
 
-          {loadingDeliver && <Loader />}
-          {userInfo &&
-            userInfo.isAdmin &&
-            order.isPaid &&
-            !order.isDelivered && (
+            {/* Payment is handled during order creation so no payment button is needed here */}
+
+            {loadingDeliver && <Loader />}
+            {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
               <button
                 type="button"
-                className="bg-pink-500 text-white py-2 px-4 rounded-full text-lg w-full mt-4"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center shadow-md"
                 onClick={deliverHandler}
               >
                 Mark As Delivered
               </button>
             )}
+          </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Order;
+export default Order

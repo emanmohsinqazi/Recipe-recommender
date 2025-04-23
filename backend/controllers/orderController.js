@@ -28,7 +28,14 @@ function calcPrices(orderItems) {
 
 const createOrder = async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod } = req.body;
+    const { 
+      orderItems, 
+      shippingAddress, 
+      paymentMethod, 
+      isPaid, 
+      paidAt, 
+      paymentResult 
+    } = req.body;
 
     if (orderItems && orderItems.length === 0) {
       res.status(400);
@@ -69,6 +76,10 @@ const createOrder = async (req, res) => {
       taxPrice,
       shippingPrice,
       totalPrice,
+      // Handle payment data if provided during order creation
+      isPaid: isPaid || false,
+      paidAt: isPaid ? (paidAt || Date.now()) : undefined,
+      paymentResult: isPaid ? paymentResult : undefined,
     });
 
     const createdOrder = await order.save();
