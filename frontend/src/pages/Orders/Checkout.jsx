@@ -1,61 +1,62 @@
-import "react-credit-cards-2/dist/es/styles-compiled.css";
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { toast } from "react-toastify";
-import BackBtn from "../../components/BackBtn";
-import CreditCard from "../../components/CreditCard";
-import Message from "../../components/Message";
-import Loader from "../../components/Loader";
-import { useCreateOrderMutation } from "../../redux/api/orderApiSlice";
-import { clearCartItems } from "../../redux/features/cart/cartSlice";
+"use client"
+
+import "react-credit-cards-2/dist/es/styles-compiled.css"
+import { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { useSelector, useDispatch } from "react-redux"
+import { toast } from "react-toastify"
+import BackBtn from "../../components/BackBtn"
+import CreditCard from "../../components/CreditCard"
+import Message from "../../components/Message"
+import Loader from "../../components/Loader"
+import { useCreateOrderMutation } from "../../redux/api/orderApiSlice"
 
 const Checkout = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [formValidated, setFormValidated] = useState(false);
-  
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [formValidated, setFormValidated] = useState(false)
+
   // Get cart state from Redux
-  const cart = useSelector((state) => state.cart);
-  const { cartItems, shippingAddress, paymentMethod } = cart;
-  
+  const cart = useSelector((state) => state.cart)
+  const { cartItems, shippingAddress, paymentMethod } = cart
+
   // Get user info for payment data
-  const { userInfo } = useSelector((state) => state.auth);
-  
+  const { userInfo } = useSelector((state) => state.auth)
+
   // Create order mutation
-  const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+  const [createOrder, { isLoading, error }] = useCreateOrderMutation()
   // Redirect to shipping if no shipping address or cart is empty
   useEffect(() => {
     if (!shippingAddress?.address) {
-      toast.error("Please enter shipping address first");
-      navigate("/shipping");
+      toast.error("Please enter shipping address first")
+      navigate("/shipping")
     } else if (cartItems.length === 0) {
-      toast.error("Your cart is empty");
-      navigate("/cart");
+      toast.error("Your cart is empty")
+      navigate("/cart")
     }
-  }, [shippingAddress, navigate, cartItems]);
+  }, [shippingAddress, navigate, cartItems])
   // Validate form and proceed to place order page
   const handleCreditCardSubmit = async (cardData) => {
-    setIsProcessingPayment(true);
+    setIsProcessingPayment(true)
 
     try {
       // Basic card validation
       if (!cardData.number || !cardData.name || !cardData.expiry || !cardData.cvc) {
-        toast.error("Please fill in all credit card details");
-        setIsProcessingPayment(false);
-        return;
+        toast.error("Please fill in all credit card details")
+        setIsProcessingPayment(false)
+        return
       }
 
       // Validate expiry date
-      const [month, year] = cardData.expiry.split('/');
-      const expiryDate = new Date(2000 + parseInt(year), parseInt(month) - 1);
-      const currentDate = new Date();
-      
+      const [month, year] = cardData.expiry.split("/")
+      const expiryDate = new Date(2000 + Number.parseInt(year), Number.parseInt(month) - 1)
+      const currentDate = new Date()
+
       if (expiryDate < currentDate) {
-        toast.error("Card has expired");
-        setIsProcessingPayment(false);
-        return;
+        toast.error("Card has expired")
+        setIsProcessingPayment(false)
+        return
       }
 
       // Create payment data to store in session
@@ -67,129 +68,146 @@ const Checkout = () => {
           email_address: userInfo?.email || "customer@example.com",
           name: cardData.name,
           last4: cardData.number.slice(-4),
-          card_type: getCardType(cardData.number)
-        }
-      };
+          card_type: getCardType(cardData.number),
+          card_details: {
+            expiry: cardData.expiry,
+            cvc: cardData.cvc, // Storing temporarily for payment processing
+          },
+        },
+      }
 
       // Save payment info in sessionStorage for PlaceOrder component
-      sessionStorage.setItem('paymentData', JSON.stringify(paymentData));
-      
+      sessionStorage.setItem("paymentData", JSON.stringify(paymentData))
+
       // Set form as validated and navigate to place order page
-      setFormValidated(true);
-      toast.success("Payment information validated. Please review your order.");
-      navigate('/placeorder');
-      
+      setFormValidated(true)
+      toast.success("Payment information validated. Please review your order.")
+      navigate("/placeorder")
     } catch (error) {
-      toast.error(error?.data?.message || "An error occurred during payment processing");
+      toast.error(error?.data?.message || "An error occurred during payment processing")
     } finally {
-      setIsProcessingPayment(false);
+      setIsProcessingPayment(false)
     }
-  };
+  }
 
   // Simple utility to determine card type
   const getCardType = (cardNumber) => {
-    const number = cardNumber.replace(/\s/g, '');
-    if (/^4/.test(number)) return "VISA";
-    if (/^5[1-5]/.test(number)) return "MASTERCARD";
-    if (/^3[47]/.test(number)) return "AMEX";
-    if (/^6(?:011|5)/.test(number)) return "DISCOVER";
-    return "UNKNOWN";
-  };
+    const number = cardNumber.replace(/\s/g, "")
+    if (/^4/.test(number)) return "VISA"
+    if (/^5[1-5]/.test(number)) return "MASTERCARD"
+    if (/^3[47]/.test(number)) return "AMEX"
+    if (/^6(?:011|5)/.test(number)) return "DISCOVER"
+    return "UNKNOWN"
+  }
 
   return (
-    <div className="my-6 container mx-auto px-4">
-      <BackBtn to={"/cart"}>Back to cart</BackBtn>
-      
-      {cartItems.length === 0 ? (
-        <Message>Your cart is empty</Message>
-      ) : (
-        <div className="grid grid-cols-1 my-4 p-4 md:grid-cols-2 gap-8 card bg-base-300 shadow-xl">
-          <section>
-            <h2 className="text-2xl w-full text-center mb-4 card-title block">
-              Order Summary
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cartItems.map((item, index) => (
-                    <tr key={index}>
-                      <td>
-                        <Link to={`/product/${item.product}`}>{item.name}</Link>
-                      </td>
-                      <td>{item.qty}</td>
-                      <td>${item.price.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                  <tr className="font-semibold">
-                    <td colSpan="2">Subtotal:</td>
-                    <td>${cart.itemsPrice}</td>
-                  </tr>
-                  <tr className="font-semibold">
-                    <td colSpan="2">Shipping:</td>
-                    <td>${cart.shippingPrice}</td>
-                  </tr>
-                  <tr className="font-semibold">
-                    <td colSpan="2">Tax:</td>
-                    <td>${cart.taxPrice}</td>
-                  </tr>
-                  <tr className="font-semibold text-lg">
-                    <td colSpan="2">Total:</td>
-                    <td>${cart.totalPrice}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 p-4 border border-base-200 rounded-lg">
-              <h3 className="text-xl mb-2">Shipping Address</h3>
-              <p>
-                {shippingAddress.address}, {shippingAddress.city},
-                {shippingAddress.postalCode}, {shippingAddress.country}
-              </p>
-            </div>
-          </section>
-          
-          <section>
-            <h2 className="text-2xl mb-4 card-title w-full block text-center">
-              Payment Details
-            </h2>
-            {isProcessingPayment ? (
-              <div className="flex flex-col items-center justify-center h-full">
-                <Loader />
-                <p className="mt-4">Validating payment details...</p>
-              </div>
-            ) : (
-              <>
-                <p className="text-center mb-4">
-                  Enter your payment details to continue to order review
-                </p>
-                <CreditCard onSubmit={handleCreditCardSubmit} />
-                <div className="mt-4 text-center text-sm text-gray-500">
-                  <p>Your payment will not be processed until you review and place your order</p>
-                </div>
-              </>
-            )}
-            {error && (
-              <div className="mt-4">
-                <Message variant="error">
-                  {error?.data?.message || "An error occurred during checkout"}
-                </Message>
-              </div>
-            )}
-          </section>
+    <div className="min-h-screen py-8 px-4" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+      <div className="container mx-auto max-w-6xl">
+        <div className="mb-6">
+          <BackBtn to={"/cart"}>Back to cart</BackBtn>
         </div>
-      )}
-      
-      {isLoading && <Loader />}
-    </div>
-  );
-};
 
-export default Checkout;
+        {cartItems.length === 0 ? (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+            <Message>Your cart is empty</Message>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Order Summary</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="py-3 px-4 text-left text-gray-700 font-medium">Name</th>
+                      <th className="py-3 px-4 text-left text-gray-700 font-medium">Quantity</th>
+                      <th className="py-3 px-4 text-left text-gray-700 font-medium">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {cartItems.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="py-3 px-4 text-gray-800">
+                          <Link to={`/product/${item.product}`} className="text-indigo-600 hover:text-indigo-800">
+                            {item.name}
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4 text-gray-800">{item.qty}</td>
+                        <td className="py-3 px-4 text-gray-800">${item.price.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                    <tr className="font-medium bg-gray-50">
+                      <td colSpan="2" className="py-3 px-4 text-gray-800">
+                        Subtotal:
+                      </td>
+                      <td className="py-3 px-4 text-gray-800">${cart.itemsPrice}</td>
+                    </tr>
+                    <tr className="font-medium">
+                      <td colSpan="2" className="py-3 px-4 text-gray-800">
+                        Shipping:
+                      </td>
+                      <td className="py-3 px-4 text-gray-800">${cart.shippingPrice}</td>
+                    </tr>
+                    <tr className="font-medium bg-gray-50">
+                      <td colSpan="2" className="py-3 px-4 text-gray-800">
+                        Tax:
+                      </td>
+                      <td className="py-3 px-4 text-gray-800">${cart.taxPrice}</td>
+                    </tr>
+                    <tr className="font-bold text-lg">
+                      <td colSpan="2" className="py-3 px-4 text-gray-800">
+                        Total:
+                      </td>
+                      <td className="py-3 px-4 text-gray-800">${cart.totalPrice}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">Shipping Address</h3>
+                <p className="text-gray-700">
+                  {shippingAddress.address}, {shippingAddress.city}, {shippingAddress.postalCode},{" "}
+                  {shippingAddress.country}
+                </p>
+              </div>
+            </section>
+
+            <section className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Payment Details</h2>
+              {isProcessingPayment ? (
+                <div className="flex flex-col items-center justify-center h-64">
+                  <Loader />
+                  <p className="mt-4 text-gray-700">Validating payment details...</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-center mb-6 text-gray-700">
+                    Enter your payment details to continue to order review
+                  </p>
+                  <CreditCard onSubmit={handleCreditCardSubmit} />
+                  <div className="mt-6 text-center text-sm text-gray-500">
+                    <p>Your payment will be processed when you review and place your order on the next screen</p>
+                  </div>
+                </>
+              )}
+              {error && (
+                <div className="mt-6">
+                  <Message variant="error">{error?.data?.message || "An error occurred during checkout"}</Message>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Loader />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default Checkout

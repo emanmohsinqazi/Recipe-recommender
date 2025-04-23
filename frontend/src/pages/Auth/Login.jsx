@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 import { useLoginMutation } from "../../redux/api/usersApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
-import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
 
 const Login = () => {
@@ -21,115 +20,134 @@ const Login = () => {
 
   const defaultRedirect = userInfo?.isAdmin ? "/admin/dashboard" : "/home";
   const redirect = sp.get("redirect") || defaultRedirect;
-  
-  console.log("Login component - Initial render");
-  console.log("Login component - Redirect path:", redirect);
-  console.log("Login component - User auth status:", userInfo ? "Authenticated" : "Not authenticated");
 
   useEffect(() => {
-    console.log("Login component - useEffect triggered");
-    console.log("Login component - Current userInfo:", userInfo);
-    
     if (userInfo) {
-      console.log("Login component - User is authenticated, navigating to:", redirect);
       const targetPath = userInfo.isAdmin ? "/admin/dashboard" : "/home";
       navigate(sp.get("redirect") || targetPath);
-    } else {
-      console.log("Login component - User not authenticated, staying on login page");
     }
   }, [navigate, sp, userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    console.log("Login component - Form submitted with email:", email);
-    
+
     try {
-      console.log("Login component - Attempting login...");
       const res = await login({ email, password }).unwrap();
-      console.log("Login component - Login successful, response:", res);
-      
-      console.log("Login component - Dispatching credentials to Redux store");
       dispatch(setCredentials({ ...res }));
-      
+
       const targetPath = res.isAdmin ? "/admin/dashboard" : "/home";
-      console.log("Login component - Navigating to redirect path:", sp.get("redirect") || targetPath);
       navigate(sp.get("redirect") || targetPath);
     } catch (err) {
-      console.error("Login component - Login failed with error:", err);
       toast.error(err?.data?.message || err.error);
     }
   };
 
   return (
-    <div>
-      <section className="pl-[10rem] flex flex-wrap">
-        <div className="mr-[4rem] mt-[5rem]">
-          <h1 className="text-2xl font-semibold mb-4">Sign In</h1>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-r from-blue-100 to-purple-100">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl">
+          <div className="px-8 pt-8 pb-6">
+            <h1 className="text-3xl font-bold text-gray-800 mb-1">
+              Welcome back
+            </h1>
+            <p className="text-gray-500 mb-6">Please sign in to your account</p>
 
-          <form onSubmit={submitHandler} className="container w-[40rem]">
-            <div className="my-[2rem]">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-white"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                className="mt-1 p-2 border rounded w-full"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <form onSubmit={submitHandler}>
+              <div className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none transition-all duration-200"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-white"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                className="mt-1 p-2 border rounded w-full"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Password
+                    </label>
+                  </div>
+                  <input
+                    type="password"
+                    id="password"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none transition-all duration-200"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <button
-              disabled={isLoading}
-              type="submit"
-              className="bg-pink-500 text-white px-4 py-2 rounded cursor-pointer my-[1rem]"
-            >
-              {isLoading ? "Signing In..." : "Sign In"}
-            </button>
+                <button
+                  disabled={isLoading}
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Signing In...
+                    </span>
+                  ) : (
+                    "Sign In"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
 
-            {isLoading && <Loader />}
-          </form>
-
-          <div className="mt-4">
-            <p className="text-white">
+          <div className="px-8 py-4 bg-gray-50 border-t border-gray-100">
+            <p className="text-center text-gray-600">
               New Customer?{" "}
               <Link
                 to={redirect ? `/register?redirect=${redirect}` : "/register"}
-                className="text-pink-500 hover:underline"
+                className="text-purple-600 hover:text-purple-800 font-medium transition-colors"
               >
-                Register
+                Create an account
               </Link>
             </p>
           </div>
         </div>
-        {/* <img
-          src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1964&q=80"
-          alt=""
-          className="h-[65rem] w-[59%] xl:block md:hidden sm:hidden rounded-lg"
-        /> */}
-      </section>
+
+        {isLoading && (
+          <div className="mt-4 flex justify-center">
+            <Loader />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
