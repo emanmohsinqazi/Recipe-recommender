@@ -28,7 +28,7 @@ const orderSchema = mongoose.Schema(
     },
     paymentResult: {
       id: { type: String },
-      status: { type: String },
+      status: { type: String, enum: ['PENDING', 'COMPLETED', 'FAILED'], default: 'PENDING' },
       update_time: { type: String },
       email_address: { type: String },
       payment_method: { type: String },

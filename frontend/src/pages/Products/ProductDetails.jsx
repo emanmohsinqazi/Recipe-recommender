@@ -67,7 +67,7 @@ const ProductDetails = () => {
     <>
       <div>
         <Link
-          to="/"
+          to="/shop"
           className="text-white font-semibold hover:underline ml-[10rem]"
         >
           Go Back

@@ -1,124 +1,195 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { AiOutlineShoppingCart, AiOutlineEye } from "react-icons/ai";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../../redux/features/cart/cartSlice";
-import { toast } from "react-toastify";
-import HeartIcon from "./HeartIcon";
+"use client"
+
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { AiOutlineShoppingCart, AiOutlineEye } from "react-icons/ai"
+import { useDispatch } from "react-redux"
+import { addToCart } from "../../redux/features/cart/cartSlice"
+import { toast } from "react-toastify"
+import HeartIcon from "./HeartIcon"
 
 const ProductCard = ({ p }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const dispatch = useDispatch();
+  const [isHovered, setIsHovered] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const dispatch = useDispatch()
 
   const addToCartHandler = (product, qty) => {
-    dispatch(addToCart({ ...product, qty }));
-    toast.success("Item added successfully", {
-      position: toast.POSITION.TOP_RIGHT,
+    setIsAddingToCart(true)
+
+    // Add to cart
+    dispatch(addToCart({ ...product, qty }))
+
+    // Show success toast
+    toast.success("Added to your cart!", {
+      position: "top-right",
       autoClose: 2000,
-    });
-  };
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      style: {
+        background: "linear-gradient(to right, #bfdbfe, #e9d5ff)",
+        color: "#1e293b",
+        borderRadius: "8px",
+        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+      },
+      icon: <AiOutlineShoppingCart size={24} />,
+    })
+
+    // Reset button state after a short delay
+    setTimeout(() => setIsAddingToCart(false), 500)
+  }
 
   return (
     <div
-      className="relative bg-[#1A1A1A] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-800 h-[420px] w-full flex flex-col"
+      className="group relative bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden shadow-[0_10px_20px_rgba(0,0,0,0.07)] hover:shadow-[0_15px_30px_rgba(191,219,254,0.4)] transition-all duration-500 h-[380px] w-full border border-white/50"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image section - fixed height */}
-      <div className="relative overflow-hidden group h-[220px] w-full flex-shrink-0">
-        <Link to={`/product/${p._id}`} className="block h-full">
-          <div className="h-full w-full">
-            <img
-              className={`w-full h-full object-cover transition-transform duration-700 ${
-                isHovered ? "scale-110" : "scale-100"
-              }`}
-              src={p.image || "/placeholder.svg"}
-              alt={p.name}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          </div>
+      {/* Sale badge - if product is on sale */}
+      {p.discountPercentage && (
+        <div className="absolute top-4 left-4 z-20 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md backdrop-blur-sm border border-white/20">
+          {Math.round(p.discountPercentage)}% OFF
+        </div>
+      )}
+
+      {/* Wishlist button */}
+      <div className="absolute top-4 right-4 z-20">
+        <HeartIcon product={p} />
+      </div>
+
+      {/* Image container */}
+      <div className="relative h-[220px] w-full overflow-hidden bg-gradient-to-br from-blue-50/80 to-purple-50/80 backdrop-blur-sm border-b border-white/50">
+        <Link to={`/product/${p._id}`}>
+          <img
+            src={p.image || "/placeholder.svg"}
+            alt={p.name}
+            className={`w-full h-full object-contain transition-all duration-700 ease-in-out ${
+              isHovered ? "scale-110 filter brightness-105" : "scale-100"
+            }`}
+          />
         </Link>
 
-        {/* Quick action buttons */}
-        <div className="absolute top-3 right-3 z-10">
-          <HeartIcon product={p} />
+        {/* Quick shop overlay - appears on hover */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/15 backdrop-blur-[2px] flex items-center justify-center transition-all duration-300 ${
+            isHovered ? "opacity-100" : "opacity-0 translate-y-4"
+          }`}
+        >
+          <div className="flex gap-2">
+            <Link
+              to={`/product/${p._id}`}
+              className="p-3 rounded-full bg-gradient-to-r from-white/80 to-white/90 text-gray-800 hover:from-white hover:to-white transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 backdrop-blur-sm border border-white/70"
+              title="Quick view"
+            >
+              <AiOutlineEye size={20} />
+            </Link>
+            <button
+              onClick={() => addToCartHandler(p, 1)}
+              className="p-3 rounded-full bg-gradient-to-r from-white/80 to-white/90 text-gray-800 hover:from-white hover:to-white transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110 backdrop-blur-sm border border-white/70"
+              title="Add to cart"
+            >
+              <AiOutlineShoppingCart size={20} />
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Brand badge */}
-        <div className="absolute bottom-3 left-3 z-10">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-pink-500/90 text-white backdrop-blur-sm">
+      {/* Product info */}
+      <div className="p-5 flex flex-col h-[160px] bg-gradient-to-br from-white/95 to-white/90">
+        {/* Brand */}
+        <div className="mb-1">
+          <span
+            className="text-xs font-semibold px-3 py-1 rounded-full inline-block shadow-sm transform transition-transform hover:scale-110 backdrop-blur-sm"
+            style={{
+              background: "linear-gradient(to right, #bfdbfe, #e9d5ff)",
+              color: "#1e293b",
+              textShadow: "0 1px 1px rgba(255,255,255,0.5)",
+              border: "1px solid rgba(255,255,255,0.5)"
+            }}
+          >
             {p?.brand}
           </span>
         </div>
 
-        {/* Quick view button - appears on hover */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
-            isHovered ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <Link
-            to={`/product/${p._id}`}
-            className="bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-colors"
-          >
-            <AiOutlineEye size={22} />
-          </Link>
-        </div>
-      </div>
+        {/* Product name */}
+        <Link to={`/product/${p._id}`} className="group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-gray-800 line-clamp-2 h-12 mb-1 transition-all duration-300 group-hover:text-indigo-700 group-hover:translate-x-0.5">{p?.name}</h3>
+        </Link>
 
-      {/* Content section - flex-grow to fill remaining space */}
-      <div className="p-4 flex-grow flex flex-col justify-between">
-        <div>
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-medium text-white line-clamp-1 mr-2">
-              {p?.name}
-            </h3>
-            <p className="text-pink-500 font-bold whitespace-nowrap">
-              {p?.price?.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </p>
+        {/* Description */}
+        <p className="text-gray-500 text-sm line-clamp-2 mb-2">{p?.description || "No description available"}</p>
+
+        {/* Price and add to cart */}
+        <div className="mt-auto flex items-center justify-between">
+          <div className="flex flex-col">
+            {p.originalPrice && p.originalPrice > p.price ? (
+              <>
+                <span className="text-gray-500 line-through text-sm">
+                  {p.originalPrice?.toLocaleString("en-PK", {
+                    style: "currency",
+                    currency: "PKR",
+                  })}
+                </span>
+                <span className="font-bold text-lg bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
+                  {p?.price?.toLocaleString("en-PK", {
+                    style: "currency",
+                    currency: "PKR",
+                  })}
+                </span>
+              </>
+            ) : (
+              <span className="font-bold text-lg bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
+                {p?.price?.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </span>
+            )}
           </div>
-          <p className="text-gray-400 text-sm line-clamp-2 h-[40px]">
-            {p?.description || "No description available"}
-          </p>
-        </div>
 
-        <div className="flex justify-between items-center mt-4">
-          <Link
-            to={`/product/${p._id}`}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-pink-600 to-pink-700 rounded-lg hover:from-pink-700 hover:to-pink-800 transition-all duration-300 shadow-sm"
-          >
-            Details
-            <svg
-              className="w-3.5 h-3.5 ml-2"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 14 10"
-            >
-              <path
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M1 5h12m0 0L9 1m4 4L9 9"
-              />
-            </svg>
-          </Link>
-
+          {/* Improved Add to Cart Button */}
           <button
-            className="p-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-white transition-colors duration-300 flex items-center justify-center"
             onClick={() => addToCartHandler(p, 1)}
+            className={`flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 hover:shadow-lg ${
+              isAddingToCart ? "scale-95" : "hover:scale-105"
+            } backdrop-blur-sm`}
+            style={{
+              background: "linear-gradient(to right, #bfdbfe, #e9d5ff)",
+              color: "#1e293b",
+              boxShadow: "0 4px 10px rgba(191, 219, 254, 0.4)",
+              border: "1px solid rgba(255,255,255,0.6)",
+              backdropFilter: "blur(4px)"
+            }}
+            disabled={isAddingToCart}
             aria-label="Add to cart"
           >
-            <AiOutlineShoppingCart size={20} />
+            <AiOutlineShoppingCart size={18} className="mr-1" />
+            <span className="font-semibold text-sm">Add</span>
           </button>
         </div>
       </div>
-    </div>
-  );
-};
 
-export default ProductCard;
+      {/* View details button - appears at bottom on hover */}
+      <div
+        className={`absolute left-0 right-0 bottom-0 p-3 transition-all duration-300 ${
+          isHovered ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+        } backdrop-blur-md`}
+        style={{
+          background: "linear-gradient(to right, #bfdbfe, #e9d5ff)",
+          boxShadow: "0 -4px 10px rgba(191, 219, 254, 0.2)"
+        }}
+      >
+        <Link
+          to={`/product/${p._id}`}
+          className="block w-full text-center py-2.5 bg-white/30 backdrop-blur-sm rounded-lg text-gray-800 font-semibold hover:bg-white/50 transition-all duration-300 shadow-sm hover:shadow-md border border-white/40 hover:border-white/60"
+        >
+          View Details
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+export default ProductCard

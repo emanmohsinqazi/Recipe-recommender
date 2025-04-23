@@ -21,7 +21,7 @@
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
     "express-formidable": "^1.2.0",
-    "framer-motion": "^12.5.0",
+    "framer-motion": "^12.6.5",
     "fyp": "file:",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.0",
