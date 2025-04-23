@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FaTrash, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
+import { toast } from "react-toastify";
 import Message from "../../components/Message";
 import Loader from "../../components/Loader";
 import {
@@ -7,8 +7,8 @@ import {
   useGetUsersQuery,
   useUpdateUserMutation,
 } from "../../redux/api/usersApiSlice";
-import { toast } from "react-toastify";
-
+import AdminMenu from "./AdminMenu";
+import { CheckCircle, X, Trash2, Edit2, Save, Mail } from "lucide-react";
 
 const UserList = () => {
   const { data: users, refetch, isLoading, error } = useGetUsersQuery();
@@ -26,10 +26,17 @@ const UserList = () => {
   }, [refetch]);
 
   const deleteHandler = async (id) => {
-    if (window.confirm("Are you sure")) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       try {
+        const toastId = toast.loading("Deleting user...");
         await deleteUser(id);
         refetch();
+        toast.update(toastId, {
+          render: "User deleted successfully",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       } catch (err) {
         toast.error(err?.data?.message || err.error);
       }
@@ -42,8 +49,13 @@ const UserList = () => {
     setEditableUserEmail(email);
   };
 
+  const cancelEdit = () => {
+    setEditableUserId(null);
+  };
+
   const updateHandler = async (id) => {
     try {
+      const toastId = toast.loading("Updating user...");
       await updateUser({
         userId: id,
         username: editableUserName,
@@ -51,120 +63,192 @@ const UserList = () => {
       });
       setEditableUserId(null);
       refetch();
+      toast.update(toastId, {
+        render: "User updated successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Users</h1>
-      {isLoading ? (
-        <Loader />
-      ) : error ? (
-        <Message variant="danger">
-          {error?.data?.message || error.error}
-        </Message>
-      ) : (
-        <div className="flex flex-col md:flex-row">
-          {/* <AdminMenu /> */}
-          <table className="w-full md:w-4/5 mx-auto">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-left">ID</th>
-                <th className="px-4 py-2 text-left">NAME</th>
-                <th className="px-4 py-2 text-left">EMAIL</th>
-                <th className="px-4 py-2 text-left">ADMIN</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user._id}>
-                  <td className="px-4 py-2">{user._id}</td>
-                  <td className="px-4 py-2">
-                    {editableUserId === user._id ? (
-                      <div className="flex items-center">
-                        <input
-                          type="text"
-                          value={editableUserName}
-                          onChange={(e) => setEditableUserName(e.target.value)}
-                          className="w-full p-2 border rounded-lg"
-                        />
-                        <button
-                          onClick={() => updateHandler(user._id)}
-                          className="ml-2 bg-blue-500 text-white py-2 px-4 rounded-lg"
-                        >
-                          <FaCheck />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        {user.username}{" "}
-                        <button
-                          onClick={() =>
-                            toggleEdit(user._id, user.username, user.email)
-                          }
-                        >
-                          <FaEdit className="ml-[1rem]" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {editableUserId === user._id ? (
-                      <div className="flex items-center">
-                        <input
-                          type="text"
-                          value={editableUserEmail}
-                          onChange={(e) => setEditableUserEmail(e.target.value)}
-                          className="w-full p-2 border rounded-lg"
-                        />
-                        <button
-                          onClick={() => updateHandler(user._id)}
-                          className="ml-2 bg-blue-500 text-white py-2 px-4 rounded-lg"
-                        >
-                          <FaCheck />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center">
-                        <a href={`mailto:${user.email}`}>{user.email}</a>{" "}
-                        <button
-                          onClick={() =>
-                            toggleEdit(user._id, user.name, user.email)
-                          }
-                        >
-                          <FaEdit className="ml-[1rem]" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {user.isAdmin ? (
-                      <FaCheck style={{ color: "green" }} />
-                    ) : (
-                      <FaTimes style={{ color: "red" }} />
-                    )}
-                  </td>
-                  <td className="px-4 py-2">
-                    {!user.isAdmin && (
-                      <div className="flex">
-                        <button
-                          onClick={() => deleteHandler(user._id)}
-                          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div
+      className="min-h-screen py-8 px-4"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="md:w-1/4">
+            <AdminMenu />
+          </div>
+
+          <div className="md:w-3/4 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              User Management
+            </h2>
+
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader />
+              </div>
+            ) : error ? (
+              <Message variant="error">
+                {error?.data?.message || error.error}
+              </Message>
+            ) : users?.length === 0 ? (
+              <div className="bg-white rounded-lg p-6 text-center">
+                <p className="text-gray-700">No users found</p>
+              </div>
+            ) : (
+              <div className="w-full">
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                        ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                        Admin
+                      </th>
+                      <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y">
+                    {users.map((user) => (
+                      <tr key={user._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-800 font-mono text-sm">
+                          {user._id.substring(0, 8)}...
+                        </td>
+
+                        <td className="px-4 py-3 text-gray-800">
+                          {editableUserId === user._id ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                value={editableUserName}
+                                onChange={(e) =>
+                                  setEditableUserName(e.target.value)
+                                }
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter name"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <span className="font-medium">
+                                {user.username}
+                              </span>
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3 text-gray-800">
+                          {editableUserId === user._id ? (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="email"
+                                value={editableUserEmail}
+                                onChange={(e) =>
+                                  setEditableUserEmail(e.target.value)
+                                }
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter email"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <a
+                                href={`mailto:${user.email}`}
+                                className="text-indigo-600 hover:text-indigo-800 flex items-center"
+                              >
+                                <Mail size={14} className="mr-1" />
+                                {user.email}
+                              </a>
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {user.isAdmin ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Admin
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              <X className="w-3 h-3 mr-1" />
+                              User
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {editableUserId === user._id ? (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => updateHandler(user._id)}
+                                className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-md transition-colors text-sm font-medium"
+                              >
+                                <Save size={14} className="mr-1" />
+                                Save
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors text-sm font-medium"
+                              >
+                                <X size={14} className="mr-1" />
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() =>
+                                  toggleEdit(
+                                    user._id,
+                                    user.username,
+                                    user.email
+                                  )
+                                }
+                                className="inline-flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors text-sm font-medium"
+                              >
+                                <Edit2 size={14} className="mr-1" />
+                                Edit
+                              </button>
+
+                              {!user.isAdmin && (
+                                <button
+                                  onClick={() => deleteHandler(user._id)}
+                                  className="inline-flex items-center px-3 py-1.5 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm font-medium"
+                                >
+                                  <Trash2 size={14} className="mr-1" />
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

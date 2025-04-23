@@ -1,11 +1,51 @@
 import Message from "../../components/Message";
 import Loader from "../../components/Loader";
 import { Link } from "react-router-dom";
-import { useGetOrdersQuery } from "../../redux/api/orderApiSlice";
+import { useGetOrdersQuery, useDeliverOrderMutation } from "../../redux/api/orderApiSlice";
 import AdminMenu from "./AdminMenu";
+import { toast } from "react-toastify";
 
 const OrderList = () => {
-  const { data: orders, isLoading, error } = useGetOrdersQuery();
+  const { data: orders, isLoading, error, refetch } = useGetOrdersQuery({}, {
+    // Polling interval for real-time updates (every 15 seconds)
+    pollingInterval: 15000,
+    refetchOnMountOrArgChange: true,
+  });
+  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
+
+  const confirmOrderHandler = async (orderId) => {
+    // Show loading toast
+    const toastId = toast.loading("Confirming order...");
+    
+    try {
+      // Mark the order as delivered
+      await deliverOrder(orderId).unwrap();
+      
+      // Immediate refetch to update the UI
+      await refetch();
+      
+      // Update toast to success
+      toast.update(toastId, {
+        render: "Order confirmed successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+      
+      // Force another refetch after a delay to ensure data is completely synchronized
+      setTimeout(() => {
+        refetch();
+      }, 2000);
+    } catch (err) {
+      // Update toast to show error
+      toast.update(toastId, {
+        render: err?.data?.message || "Failed to confirm order",
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+  };
 
   return (
     <>
@@ -77,9 +117,20 @@ const OrderList = () => {
                 </td>
 
                 <td>
-                  <Link to={`/order/${order._id}`}>
-                    <button>More</button>
-                  </Link>
+                  <div className="flex space-x-2">
+                    <Link to={`/order/${order._id}`}>
+                      <button className="bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded">Details</button>
+                    </Link>
+                    {!order.isDelivered && (
+                      <button 
+                        onClick={() => confirmOrderHandler(order._id)}
+                        disabled={loadingDeliver}
+                        className={`text-white px-2 py-1 rounded ${loadingDeliver ? 'bg-gray-400' : 'bg-green-500 hover:bg-green-700'}`}
+                      >
+                        {loadingDeliver ? 'Processing...' : 'Confirm Order'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
