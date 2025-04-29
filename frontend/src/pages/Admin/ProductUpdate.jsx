@@ -1,269 +1,396 @@
-import { useState, useEffect } from "react";
-import AdminMenu from "./AdminMenu";
-import { useNavigate, useParams } from "react-router-dom";
+"use client"
+
+import { useState, useEffect } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import {
   useUpdateProductMutation,
   useDeleteProductMutation,
   useGetProductByIdQuery,
   useUploadProductImageMutation,
-} from "../../redux/api/productApiSlice";
-import { useFetchCategoriesQuery } from "../../redux/api/categoryApiSlice";
-import { toast } from "react-toastify";
+} from "../../redux/api/productApiSlice"
+import { useFetchCategoriesQuery } from "../../redux/api/categoryApiSlice"
+import { toast } from "react-toastify"
 
 const AdminProductUpdate = () => {
-  const params = useParams();
+  const params = useParams()
 
-  const { data: productData } = useGetProductByIdQuery(params._id);
+  const { data: productData } = useGetProductByIdQuery(params._id)
 
-  console.log(productData);
-
-  const [image, setImage] = useState(productData?.image || "");
-  const [name, setName] = useState(productData?.name || "");
-  const [description, setDescription] = useState(
-    productData?.description || ""
-  );
-  const [price, setPrice] = useState(productData?.price || "");
-  const [category, setCategory] = useState(productData?.category || "");
-  const [quantity, setQuantity] = useState(productData?.quantity || "");
-  const [brand, setBrand] = useState(productData?.brand || "");
-  const [stock, setStock] = useState(productData?.countInStock);
+  const [image, setImage] = useState(productData?.image || "")
+  const [name, setName] = useState(productData?.name || "")
+  const [description, setDescription] = useState(productData?.description || "")
+  const [price, setPrice] = useState(productData?.price || "")
+  const [category, setCategory] = useState(productData?.category || "")
+  const [quantity, setQuantity] = useState(productData?.quantity || "")
+  const [brand, setBrand] = useState(productData?.brand || "")
+  const [stock, setStock] = useState(productData?.countInStock)
 
   // hook
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // Fetch categories using RTK Query
-  const { data: categories = [] } = useFetchCategoriesQuery();
+  const { data: categories = [] } = useFetchCategoriesQuery()
 
-  const [uploadProductImage] = useUploadProductImageMutation();
+  const [uploadProductImage] = useUploadProductImageMutation()
 
   // Define the update product mutation
-  const [updateProduct] = useUpdateProductMutation();
+  const [updateProduct] = useUpdateProductMutation()
 
   // Define the delete product mutation
-  const [deleteProduct] = useDeleteProductMutation();
+  const [deleteProduct] = useDeleteProductMutation()
 
   useEffect(() => {
     if (productData && productData._id) {
-      setName(productData.name);
-      setDescription(productData.description);
-      setPrice(productData.price);
-      setCategory(productData.category?._id);
-      setQuantity(productData.quantity);
-      setBrand(productData.brand);
-      setImage(productData.image);
+      setName(productData.name)
+      setDescription(productData.description)
+      setPrice(productData.price)
+      setCategory(productData.category?._id)
+      setQuantity(productData.quantity)
+      setBrand(productData.brand)
+      setImage(productData.image)
     }
-  }, [productData]);
+  }, [productData])
 
   const uploadFileHandler = async (e) => {
-    const formData = new FormData();
-    formData.append("image", e.target.files[0]);
+    const formData = new FormData()
+    formData.append("image", e.target.files[0])
     try {
-      const res = await uploadProductImage(formData).unwrap();
-      toast.success("Item added successfully", {
+      const res = await uploadProductImage(formData).unwrap()
+      toast.success("Image uploaded successfully", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      });
-      setImage(res.image);
+      })
+      setImage(res.image)
     } catch (err) {
-      toast.success("Item added successfully", {
+      toast.error("Image upload failed", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      });
+      })
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
-      const formData = new FormData();
-      formData.append("image", image);
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("category", category);
-      formData.append("quantity", quantity);
-      formData.append("brand", brand);
-      formData.append("countInStock", stock);
+      const formData = new FormData()
+      formData.append("image", image)
+      formData.append("name", name)
+      formData.append("description", description)
+      formData.append("price", price)
+      formData.append("category", category)
+      formData.append("quantity", quantity)
+      formData.append("brand", brand)
+      formData.append("countInStock", stock)
 
       // Update product using the RTK Query mutation
-      const data = await updateProduct({ productId: params._id, formData });
+      const data = await updateProduct({ productId: params._id, formData })
 
       if (data?.error) {
         toast.error(data.error, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
-        });
+        })
       } else {
         toast.success(`Product successfully updated`, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
-        });
-        navigate("/admin/allproductslist");
+        })
+        navigate("/admin/allproductslist")
       }
     } catch (err) {
-      console.log(err);
+      console.log(err)
       toast.error("Product update failed. Try again.", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      });
+      })
     }
-  };
+  }
 
   const handleDelete = async () => {
     try {
-      let answer = window.confirm(
-        "Are you sure you want to delete this product?"
-      );
-      if (!answer) return;
+      const answer = window.confirm("Are you sure you want to delete this product?")
+      if (!answer) return
 
-      const { data } = await deleteProduct(params._id);
+      const { data } = await deleteProduct(params._id)
       toast.success(`"${data.name}" is deleted`, {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      });
-      navigate("/admin/allproductslist");
+      })
+      navigate("/admin/allproductslist")
     } catch (err) {
-      console.log(err);
+      console.log(err)
       toast.error("Delete failed. Try again.", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      });
+      })
     }
-  };
+  }
 
   return (
-    <>
-      <div className="container  xl:mx-[9rem] sm:mx-[0]">
-        <div className="flex flex-col md:flex-row">
-          <AdminMenu />
-          <div className="md:w-3/4 p-3">
-            <div className="h-12">Update / Delete Product</div>
-
-            {image && (
-              <div className="text-center">
-                <img
-                  src={image}
-                  alt="product"
-                  className="block mx-auto w-full h-[40%]"
-                />
-              </div>
-            )}
-
-            <div className="mb-3">
-              <label className="text-white  py-2 px-4 block w-full text-center rounded-lg cursor-pointer font-bold py-11">
-                {image ? image.name : "Upload image"}
-                <input
-                  type="file"
-                  name="image"
-                  accept="image/*"
-                  onChange={uploadFileHandler}
-                  className="text-white"
-                />
-              </label>
-            </div>
-
-            <div className="p-3">
-              <div className="flex flex-wrap">
-                <div className="one">
-                  <label htmlFor="name">Name</label> <br />
-                  <input
-                    type="text"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white mr-[5rem]"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-
-                <div className="two">
-                  <label htmlFor="name block">Price</label> <br />
-                  <input
-                    type="number"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white "
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap">
-                <div>
-                  <label htmlFor="name block">Quantity</label> <br />
-                  <input
-                    type="number"
-                    min="1"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white mr-[5rem]"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="name block">Brand</label> <br />
-                  <input
-                    type="text"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white "
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <label htmlFor="" className="my-5">
-                Description
-              </label>
-              <textarea
-                type="text"
-                className="p-2 mb-3 bg-[#101011]  border rounded-lg w-[95%] text-white"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-
-              <div className="flex justify-between">
-                <div>
-                  <label htmlFor="name block">Count In Stock</label> <br />
-                  <input
-                    type="text"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white "
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="">Category</label> <br />
-                  <select
-                    placeholder="Choose Category"
-                    className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white mr-[5rem]"
-                    onChange={(e) => setCategory(e.target.value)}
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
+      <div className="container mx-auto pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4 py-6">
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="md:w-full">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4">
+                <h2 className="text-xl font-bold text-white flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    {categories?.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Update Product
+                </h2>
               </div>
 
-              <div className="">
-                <button
-                  onClick={handleSubmit}
-                  className="py-4 px-10 mt-5 rounded-lg text-lg font-bold  bg-green-600 mr-6"
-                >
-                  Update
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="py-4 px-10 mt-5 rounded-lg text-lg font-bold  bg-pink-600"
-                >
-                  Delete
-                </button>
+              <div className="p-6">
+                {/* Image Preview */}
+                {image && (
+                  <div className="mb-6">
+                    <div className="relative rounded-lg overflow-hidden shadow-md h-64 bg-gray-100 flex items-center justify-center">
+                      <img
+                        src={image || "/placeholder.svg"}
+                        alt={name || "Product"}
+                        className="object-contain max-h-full max-w-full"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Image Upload */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-200">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg
+                          className="w-8 h-8 mb-3 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          ></path>
+                        </svg>
+                        <p className="mb-1 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG or GIF (MAX. 800x400px)</p>
+                      </div>
+                      <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={uploadFileHandler}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Name */}
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Product Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                        Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        id="price"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Quantity */}
+                    <div>
+                      <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+                        Quantity
+                      </label>
+                      <input
+                        type="number"
+                        id="quantity"
+                        min="1"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Brand */}
+                    <div>
+                      <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
+                        Brand
+                      </label>
+                      <input
+                        type="text"
+                        id="brand"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                      />
+                    </div>
+
+                    {/* Count In Stock */}
+                    <div>
+                      <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+                        Count In Stock
+                      </label>
+                      <input
+                        type="number"
+                        id="stock"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={stock}
+                        onChange={(e) => setStock(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    {/* Category */}
+                    <div>
+                      <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                        Category
+                      </label>
+                      <select
+                        id="category"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        required
+                      >
+                        <option value="">Select a category</option>
+                        {categories?.map((c) => (
+                          <option key={c._id} value={c._id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-6">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      id="description"
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        />
+                      </svg>
+                      Update Product
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="px-6 py-2.5 bg-red-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete Product
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate("/admin/allproductslist")}
+                      className="px-6 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                        />
+                      </svg>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
-  );
-};
+    </div>
+  )
+}
 
-export default AdminProductUpdate;
+export default AdminProductUpdate

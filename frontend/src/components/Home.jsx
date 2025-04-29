@@ -1,9 +1,11 @@
+"use client"
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight } from "lucide-react"
 
 // Import Lucide icons - make sure to install with: npm install lucide-react
-import { ChefHat, ShoppingCart, LayoutGrid, Bot } from 'lucide-react'
+import { ChefHat, ShoppingCart, LayoutGrid, Bot } from "lucide-react"
 
 const Card = ({ title, description, icon, route }) => {
   const navigate = useNavigate()
@@ -67,11 +69,21 @@ const Home = () => {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8" 
-         style={{ 
-           background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" 
-         }}>
-      <div className="max-w-6xl w-full">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center py-8 relative bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url('https://images.unsplash.com/photo-1490818387583-1baba5e638af?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1932&q=80')`,
+      }}
+    >
+      {/* Semi-transparent gradient overlay */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          background: "linear-gradient(to right, rgba(191, 219, 254, 0.85), rgba(233, 213, 255, 0.85))",
+        }}
+      ></div>
+
+      <div className="max-w-6xl w-full relative z-10 pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-4 text-gray-800 tracking-tight">Welcome to Smart Recipe Grocer</h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
