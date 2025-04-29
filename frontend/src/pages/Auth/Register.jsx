@@ -60,9 +60,10 @@ const Register = () => {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center p-4 bg-gradient-to-r from-blue-100 to-purple-100 overflow-hidden">
-      <div className="w-full max-w-xl rounded-2xl shadow-xl overflow-hidden bg-white/90 backdrop-blur-sm">
-        <div className="w-full p-8">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-r from-blue-100 to-purple-100">
+      <div className="w-full max-w-5xl flex flex-col md:flex-row overflow-hidden rounded-xl shadow-xl bg-white">
+        {/* Form Section */}
+        <div className="w-full md:w-3/5 p-8">
           <h1 className="text-3xl font-bold mb-6 text-gray-800">Create Account</h1>
 
           <form onSubmit={submitHandler} className="space-y-5">
@@ -213,6 +214,41 @@ const Register = () => {
                 Sign In
               </Link>
             </p>
+          </div>
+        </div>
+
+        {/* Image Section */}
+        <div className="w-full md:w-2/5 relative overflow-hidden">
+          {/* Background Image */}
+          <img
+            src="https://images.unsplash.com/photo-1505252585461-04db1eb84625?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+            alt="Colorful healthy food"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/60 to-purple-600/60"></div>
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">Join Our Community</h2>
+            <p className="text-white text-lg mb-6">Create an account to access exclusive recipes and meal plans</p>
+            {/* <div className="w-32 h-32 mx-auto rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-16 h-16 text-white"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                <path d="M2 17l10 5 10-5"></path>
+                <path d="M2 12l10 5 10-5"></path>
+              </svg>
+            </div> */}
           </div>
         </div>
       </div>
