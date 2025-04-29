@@ -1,5 +1,3 @@
-"use client"
-
 import Chart from "react-apexcharts"
 import { useGetUsersQuery } from "../../redux/api/usersApiSlice"
 import {
@@ -9,16 +7,58 @@ import {
 } from "../../redux/api/orderApiSlice"
 
 import { useState, useEffect } from "react"
-import AdminMenu from "./AdminMenu"
-import OrderList from "./orderList"
 import Loader from "../../components/Loader"
-import { DollarSign, Users, ShoppingBag } from "lucide-react"
+import { DollarSign, Users, ShoppingBag, BarChart2 } from "lucide-react"
+import { useGetOrdersQuery, useDeliverOrderMutation } from "../../redux/api/orderApiSlice"
+import { toast } from "react-toastify"
+import { CheckCircle, Clock, Eye, CheckSquare } from "lucide-react"
+import { Link } from "react-router-dom"
 
 const AdminDashboard = () => {
   const { data: sales, isLoading } = useGetTotalSalesQuery()
   const { data: customers, isLoading: loading } = useGetUsersQuery()
   const { data: orders, isLoading: loadingTwo } = useGetTotalOrdersQuery()
   const { data: salesDetail } = useGetTotalSalesByDateQuery()
+
+  // For OrderList functionality
+  const {
+    data: ordersList,
+    isLoading: ordersLoading,
+    error: ordersError,
+    refetch,
+  } = useGetOrdersQuery(
+    {},
+    {
+      pollingInterval: 15000,
+      refetchOnMountOrArgChange: true,
+    },
+  )
+  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation()
+
+  const confirmOrderHandler = async (orderId) => {
+    const toastId = toast.loading("Confirming order...")
+
+    try {
+      await deliverOrder(orderId).unwrap()
+      await refetch()
+      toast.update(toastId, {
+        render: "Order confirmed successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      })
+      setTimeout(() => {
+        refetch()
+      }, 2000)
+    } catch (err) {
+      toast.update(toastId, {
+        render: err?.data?.message || "Failed to confirm order",
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      })
+    }
+  }
 
   const [state, setState] = useState({
     options: {
@@ -142,67 +182,19 @@ const AdminDashboard = () => {
     }
   }, [salesDetail])
 
-  // Add CSS to fix table text visibility
-  useEffect(() => {
-    // Create a style element
-    const style = document.createElement("style")
-
-    // Add CSS rules to ensure table text is visible
-    style.textContent = `
-      /* Ensure table text is visible */
-      table {
-        color: #1f2937 !important;
-      }
-      
-      table th {
-        color: #1f2937 !important;
-        background-color: #f3f4f6 !important;
-        font-weight: 600 !important;
-      }
-      
-      table td {
-        color: #4b5563 !important;
-        background-color: white !important;
-      }
-      
-      table tr:hover td {
-        background-color: #f9fafb !important;
-      }
-      
-      /* Fix any links in the table */
-      table a {
-        color: #6366f1 !important;
-        text-decoration: none !important;
-      }
-      
-      table a:hover {
-        color: #4f46e5 !important;
-        text-decoration: underline !important;
-      }
-      
-      /* Fix any buttons in the table */
-      table button {
-        color: white !important;
-      }
-    `
-
-    // Append the style element to the document head
-    document.head.appendChild(style)
-
-    // Clean up function to remove the style element when component unmounts
-    return () => {
-      document.head.removeChild(style)
-    }
-  }, [])
-
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
-      <AdminMenu />
+    <div className="min-h-screen py-6" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+      <div className="container mx-auto pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+            <BarChart2 className="mr-2 text-purple-500" size={28} />
+            Dashboard Overview
+          </h1>
+        </div>
 
-      <section className="xl:ml-[4rem] md:ml-[0rem] p-6">
-        <div className="flex flex-wrap gap-6 justify-center md:justify-start">
+        <div className="flex flex-wrap gap-6 mb-8">
           {/* Sales Card */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg w-full sm:w-[20rem]">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg flex-1 min-w-[250px]">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                 <DollarSign size={24} />
@@ -210,55 +202,227 @@ const AdminDashboard = () => {
               <div>
                 <p className="text-gray-600 font-medium">Total Sales</p>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  {isLoading ? <Loader /> : `$${sales.totalSales.toFixed(2)}`}
+                  {isLoading ? <Loader /> : `$${sales?.totalSales?.toFixed(2) || "0.00"}`}
                 </h1>
               </div>
             </div>
           </div>
 
           {/* Customers Card */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg w-full sm:w-[20rem]">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg flex-1 min-w-[250px]">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                 <Users size={24} />
               </div>
               <div>
                 <p className="text-gray-600 font-medium">Total Customers</p>
-                <h1 className="text-2xl font-bold text-gray-800">{loading ? <Loader /> : customers?.length}</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{loading ? <Loader /> : customers?.length || 0}</h1>
               </div>
             </div>
           </div>
 
           {/* Orders Card */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg w-full sm:w-[20rem]">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg flex-1 min-w-[250px]">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                 <ShoppingBag size={24} />
               </div>
               <div>
                 <p className="text-gray-600 font-medium">Total Orders</p>
-                <h1 className="text-2xl font-bold text-gray-800">{loadingTwo ? <Loader /> : orders?.totalOrders}</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {loadingTwo ? <Loader /> : orders?.totalOrders || 0}
+                </h1>
               </div>
             </div>
           </div>
         </div>
 
         {/* Chart Section */}
-        <div className="mt-10 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Sales Analytics</h2>
+        <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2 text-purple-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+              />
+            </svg>
+            Sales Analytics
+          </h2>
           <div className="w-full">
             <Chart options={state.options} series={state.series} type="bar" height={350} />
           </div>
         </div>
 
         {/* Orders List Section */}
-        <div className="mt-10 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Orders</h2>
-          <div className="order-list-container text-gray-800">
-            <OrderList />
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2 text-purple-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+            Recent Orders
+          </h2>
+
+          {/* Integrated OrderList */}
+          <div className="w-full">
+            {ordersLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader />
+              </div>
+            ) : ordersError ? (
+              <div className="bg-red-50 p-4 rounded-lg text-red-600">
+                {ordersError?.data?.message || "Error loading orders"}
+              </div>
+            ) : ordersList && ordersList.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Items
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Paid
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Delivered
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {ordersList.slice(0, 5).map((order) => (
+                      <tr key={order._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <img
+                            src={order.orderItems[0].image || "/placeholder.svg"}
+                            alt={order._id}
+                            className="w-16 h-16 object-cover rounded-md"
+                          />
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                          <span className="truncate max-w-[100px] inline-block">{order._id}</span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {order.user ? order.user.username : "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          ${order.totalPrice.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {order.isPaid ? (
+                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              <CheckCircle size={14} className="mr-1" /> Paid
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                              <Clock size={14} className="mr-1" /> Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {order.isDelivered ? (
+                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              <CheckCircle size={14} className="mr-1" /> Delivered
+                            </span>
+                          ) : (
+                            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                              <Clock size={14} className="mr-1" /> Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Link to={`/order/${order._id}`}>
+                              <button className="inline-flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors w-full justify-center">
+                                <Eye size={14} className="mr-1" /> Details
+                              </button>
+                            </Link>
+                            {!order.isDelivered && (
+                              <button
+                                onClick={() => confirmOrderHandler(order._id)}
+                                disabled={loadingDeliver}
+                                className={`inline-flex items-center px-3 py-1.5 rounded-md transition-colors w-full justify-center ${
+                                  loadingDeliver
+                                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                    : "bg-green-100 text-green-700 hover:bg-green-200"
+                                }`}
+                              >
+                                <CheckSquare size={14} className="mr-1" />
+                                {loadingDeliver ? "Processing..." : "Confirm"}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg p-6 text-center">
+                <p className="text-gray-700">No orders found</p>
+              </div>
+            )}
+
+            {ordersList && ordersList.length > 5 && (
+              <div className="mt-4 text-center">
+                <Link
+                  to="/admin/orderlist"
+                  className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-md transition-colors text-sm font-medium"
+                >
+                  View All Orders
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 ml-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }

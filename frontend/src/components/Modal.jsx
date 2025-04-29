@@ -1,22 +1,30 @@
-const Modal = ({ isOpen, onClose, children }) => {
-    return (
-      <>
-        {isOpen && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="fixed inset-0 bg-black opacity-50"></div>
-            <div className="absolute top-[40%] right-[50%] bg-white p-4 rounded-lg z-10 text-right">
+
+
+import { X } from "lucide-react"
+
+const Modal = ({ isOpen, onClose, children, title }) => {
+  return (
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div className="bg-white/90 rounded-xl shadow-lg w-full max-w-md mx-4 z-10 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">{title || "Edit Category"}</h3>
               <button
-                className="text-black font-semibold hover:text-gray-700 focus:outline-none mr-2"
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                 onClick={onClose}
+                aria-label="Close modal"
               >
-                X
+                <X size={20} />
               </button>
-              {children}
             </div>
+            <div className="p-4">{children}</div>
           </div>
-        )}
-      </>
-    );
-  };
-  
-  export default Modal;
+        </div>
+      )}
+    </>
+  )
+}
+
+export default Modal
