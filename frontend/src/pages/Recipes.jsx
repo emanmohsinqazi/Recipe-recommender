@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Heart, Search, ChevronDown, X, Loader2, ChefHat } from 'lucide-react';
+import { toggleFavorite } from "../redux/features/favorites/favoriteSlice";
 
-function Recipes() {
-  const [ingredients, setIngredients] = useState("");
+export default function Recipes() {
   const [nutrition, setNutrition] = useState({
     calories: 0,
     fat: 0,
@@ -17,21 +17,35 @@ function Recipes() {
   });
   const [recipes, setRecipes] = useState([]);
   const [error, setError] = useState("");
-  const [favorites, setFavorites] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandedSection, setExpandedSection] = useState(null);
+  const [ingredients, setIngredients] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // Get favorites from Redux store
+  const favorites = useSelector(state => state.favorites.favorites);
+  
+  const nutritionFields = [
+    { key: "calories", label: "Calories", unit: "kcal" },
+    { key: "protein", label: "Protein", unit: "g" },
+    { key: "carbohydrates", label: "Carbs", unit: "g" },
+    { key: "fat", label: "Fat", unit: "g" },
+    { key: "fiber", label: "Fiber", unit: "g" },
+    { key: "sodium", label: "Sodium", unit: "mg" },
+    { key: "cholesterol", label: "Cholesterol", unit: "mg" },
+  ];
 
+  // Added missing handleInputChange function
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (value < 0 || isNaN(value)) {
-      alert("Invalid value! Please enter a positive number.");
-    } else {
-      setNutrition({ ...nutrition, [name]: value });
-    }
+    setNutrition(prev => ({
+      ...prev,
+      [name]: Number(value)
+    }));
   };
-
+  
+  // Added missing handleRecommend function beginning
   const handleRecommend = async () => {
     try {
       setIsLoading(true);
@@ -55,29 +69,15 @@ function Recipes() {
     });
   };
 
-  const toggleFavorite = (e, recipe) => {
+  const handleToggleFavorite = (e, recipe) => {
     e.stopPropagation();
-    setFavorites((prev) =>
-      prev.some((fav) => fav.recipe_name === recipe.recipe_name)
-        ? prev.filter((fav) => fav.recipe_name !== recipe.recipe_name)
-        : [...prev, recipe]
-    );
+    dispatch(toggleFavorite(recipe));
   };
-
+  
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
-
-  const nutritionFields = [
-    { key: "calories", label: "Calories", unit: "kcal" },
-    { key: "protein", label: "Protein", unit: "g" },
-    { key: "carbohydrates", label: "Carbohydrates", unit: "g" },
-    { key: "fat", label: "Fat", unit: "g" },
-    { key: "fiber", label: "Fiber", unit: "g" },
-    { key: "sodium", label: "Sodium", unit: "mg" },
-    { key: "cholesterol", label: "Cholesterol", unit: "mg" },
-  ];
-
+  
   return (
     <div 
       className="min-h-screen flex items-center justify-center py-12 px-4"
@@ -231,7 +231,7 @@ function Recipes() {
                     <div className="p-5 relative">
                       <button
                         className="absolute top-5 right-5 p-2 rounded-full bg-white/80 hover:bg-white transition-colors duration-200"
-                        onClick={(e) => toggleFavorite(e, recipe)}
+                        onClick={(e) => handleToggleFavorite(e, recipe)}
                       >
                         <Heart
                           className={`h-5 w-5 ${
@@ -260,13 +260,7 @@ function Recipes() {
                               {recipe.calories} cal
                             </span>
                           )}
-                          {recipe.cooking_time && (
-                            <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md text-xs">
-                              {recipe.cooking_time} min
-                            </span>
-                          )}
                         </div>
-                        <span className="text-sm text-purple-600 font-medium">View Recipe →</span>
                       </div>
                     </div>
                   </div>
@@ -279,5 +273,3 @@ function Recipes() {
     </div>
   );
 }
-
-export default Recipes;
