@@ -63,7 +63,10 @@ const ProductTabs = ({
             {userInfo ? (
               <form onSubmit={submitHandler}>
                 <div className="my-2">
-                  <label htmlFor="rating"  className=" text-gray-600 block text-xl mb-2">
+                  <label
+                    htmlFor="rating"
+                    className=" text-gray-600 block text-xl mb-2"
+                  >
                     Rating
                   </label>
 
@@ -84,7 +87,10 @@ const ProductTabs = ({
                 </div>
 
                 <div className="my-2">
-                  <label htmlFor="comment" className="text-gray-600 block text-xl mb-2">
+                  <label
+                    htmlFor="comment"
+                    className="text-gray-600 block text-xl mb-2"
+                  >
                     Comment
                   </label>
 
@@ -107,7 +113,11 @@ const ProductTabs = ({
               </form>
             ) : (
               <p className="text-gray-600">
-                Please <Link className="text-gray-600" to="/login">sign in</Link> to write a review
+                Please{" "}
+                <Link className="text-gray-600" to="/login">
+                  sign in
+                </Link>{" "}
+                to write a review
               </p>
             )}
           </div>
@@ -117,13 +127,17 @@ const ProductTabs = ({
       <section>
         {activeTab === 2 && (
           <>
-            <div>{product.reviews.length === 0 && <p className="text-gray-600">No Reviews</p>}</div>
+            <div>
+              {product.reviews.length === 0 && (
+                <p className="text-gray-600">No Reviews</p>
+              )}
+            </div>
 
             <div>
               {product.reviews.map((review) => (
                 <div
                   key={review._id}
-                  className="bg-[#1A1A1A] p-4 rounded-lg xl:ml-[2rem] sm:ml-[0rem] xl:w-[50rem] sm:w-[24rem] mb-5"
+                  className="text-gray-600 p-4 rounded-lg xl:ml-[2rem] sm:ml-[0rem] xl:w-[50rem] sm:w-[24rem] mb-5"
                 >
                   <div className="flex justify-between">
                     <strong className="text-[#080808]">{review.name}</strong>
