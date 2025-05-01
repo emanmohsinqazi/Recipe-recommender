@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
-import { Search, Plus, Trash2, AlertCircle, Minus, Edit2, Check, X, RefreshCw, Filter, Package } from 'lucide-react';
-
-const initialInventory = [
-  { id: 1, name: 'Tomatoes', category: 'vegetables', quantity: 5, unit: 'kg', lowThreshold: 2 },
-  { id: 2, name: 'Milk', category: 'dairy', quantity: 2, unit: 'L', lowThreshold: 1 },
-  { id: 3, name: 'Apples', category: 'fruits', quantity: 8, unit: 'kg', lowThreshold: 3 },
-  { id: 4, name: 'Rice', category: 'ingredients', quantity: 3, unit: 'kg', lowThreshold: 5 }
-];
+import  { useState, useEffect } from 'react';
+import { Search, Plus, Trash2, AlertCircle, Minus, Edit2, Check, X, RefreshCw, Filter, Package, Loader } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { 
+  useGetInventoryQuery,
+  useAddInventoryItemMutation,
+  useUpdateInventoryItemMutation,
+  useDeleteInventoryItemMutation,
+  useUpdateQuantityMutation,
+  useGetLowStockItemsQuery,
+  useGetCategoryStatsQuery
+} from '../redux/api/inventoryApiSlice';
 
 const units = ['kg', 'L', 'pcs', 'g'];
 const categories = ['ingredients', 'fruits', 'vegetables', 'dairy'];
 
 function Kitchen() {
-  const [inventory, setInventory] = useState(initialInventory);
+  // Local state for UI controls
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [newItem, setNewItem] = useState({ 
@@ -26,35 +29,59 @@ function Kitchen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = activeFilter === 'all' || item.category === activeFilter;
-    return matchesSearch && matchesCategory;
+  // API queries and mutations
+  const { data: inventoryData, isLoading, error: inventoryError, refetch } = useGetInventoryQuery({ 
+    keyword: searchTerm, 
+    category: activeFilter 
   });
+  
+  const { data: lowStockData, isLoading: lowStockLoading } = useGetLowStockItemsQuery();
+  const { data: categoryStatsData, isLoading: statsLoading } = useGetCategoryStatsQuery();
+  
+  const [addInventoryItem, { isLoading: isAddingItem }] = useAddInventoryItemMutation();
+  const [updateInventoryItem, { isLoading: isUpdatingItem }] = useUpdateInventoryItemMutation();
+  const [deleteInventoryItem, { isLoading: isDeletingItem }] = useDeleteInventoryItemMutation();
+  const [updateQuantity, { isLoading: isUpdatingQuantity }] = useUpdateQuantityMutation();
 
-  const lowStockItems = inventory.filter(item => item.quantity <= item.lowThreshold);
+  // Error handling for inventory data
+  useEffect(() => {
+    if (inventoryError) {
+      toast.error('Failed to load inventory data');
+      console.error(inventoryError);
+    }
+  }, [inventoryError]);
 
-  const addItem = (e) => {
+  const inventory = inventoryData || [];
+  const lowStockItems = lowStockData || [];
+
+  // Form handlers
+  const addItem = async (e) => {
     e.preventDefault();
     if (!newItem.name) return;
     
-    setInventory([
-      ...inventory,
-      {
-        id: Date.now(),
-        ...newItem
-      }
-    ]);
-    setNewItem({ name: '', category: 'ingredients', quantity: 1, unit: 'kg', lowThreshold: 1 });
-    setShowAddForm(false);
+    try {
+      await addInventoryItem(newItem).unwrap();
+      toast.success('Item added successfully');
+      setNewItem({ name: '', category: 'ingredients', quantity: 1, unit: 'kg', lowThreshold: 1 });
+      setShowAddForm(false);
+    } catch (err) {
+      toast.error(err?.data?.error || 'Failed to add item');
+      console.error(err);
+    }
   };
 
-  const removeItem = (id) => {
-    setInventory(inventory.filter(item => item.id !== id));
+  const removeItem = async (id) => {
+    try {
+      await deleteInventoryItem(id).unwrap();
+      toast.success('Item removed successfully');
+    } catch (err) {
+      toast.error(err?.data?.error || 'Failed to remove item');
+      console.error(err);
+    }
   };
 
   const startEditing = (item) => {
-    setEditingId(item.id);
+    setEditingId(item._id);
     setEditItem({ ...item });
   };
 
@@ -63,30 +90,45 @@ function Kitchen() {
     setEditItem({});
   };
 
-  const saveEdit = () => {
-    setInventory(inventory.map(item => 
-      item.id === editingId ? { ...editItem } : item
-    ));
-    setEditingId(null);
-    setEditItem({});
+  const saveEdit = async () => {
+    try {
+      await updateInventoryItem({
+        itemId: editingId,
+        itemData: editItem
+      }).unwrap();
+      toast.success('Item updated successfully');
+      setEditingId(null);
+      setEditItem({});
+    } catch (err) {
+      toast.error(err?.data?.error || 'Failed to update item');
+      console.error(err);
+    }
   };
 
-  const decreaseQuantity = (id) => {
-    setInventory(inventory.map(item => {
-      if (item.id === id && item.quantity > 0) {
-        return { ...item, quantity: Math.max(0, item.quantity - 1) };
-      }
-      return item;
-    }));
+  const decreaseQuantity = async (id) => {
+    try {
+      await updateQuantity({
+        itemId: id,
+        action: 'decrease',
+        amount: 1
+      }).unwrap();
+    } catch (err) {
+      toast.error(err?.data?.error || 'Failed to update quantity');
+      console.error(err);
+    }
   };
 
-  const increaseQuantity = (id) => {
-    setInventory(inventory.map(item => {
-      if (item.id === id) {
-        return { ...item, quantity: item.quantity + 1 };
-      }
-      return item;
-    }));
+  const increaseQuantity = async (id) => {
+    try {
+      await updateQuantity({
+        itemId: id,
+        action: 'increase',
+        amount: 1
+      }).unwrap();
+    } catch (err) {
+      toast.error(err?.data?.error || 'Failed to update quantity');
+      console.error(err);
+    }
   };
 
   const isLowQuantity = (item) => item.quantity <= item.lowThreshold;
@@ -97,6 +139,7 @@ function Kitchen() {
       style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
     >
       <div className="max-w-6xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center p-3 bg-white/30 backdrop-blur-sm rounded-full mb-4">
             <Package className="h-8 w-8 text-purple-700" />
@@ -111,15 +154,36 @@ function Kitchen() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6">
             <h3 className="text-lg font-medium text-gray-700 mb-2">Total Items</h3>
-            <p className="text-3xl font-bold text-gray-800">{inventory.length}</p>
+            {statsLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader className="h-6 w-6 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-800">{inventory.length}</p>
+            )}
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6">
             <h3 className="text-lg font-medium text-gray-700 mb-2">Categories</h3>
-            <p className="text-3xl font-bold text-gray-800">{new Set(inventory.map(item => item.category)).size}</p>
+            {statsLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader className="h-6 w-6 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-800">
+                {categoryStatsData ? categoryStatsData.length : 
+                  new Set(inventory.map(item => item.category)).size}
+              </p>
+            )}
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-md p-6">
             <h3 className="text-lg font-medium text-gray-700 mb-2">Low Stock Items</h3>
-            <p className="text-3xl font-bold text-gray-800">{lowStockItems.length}</p>
+            {lowStockLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader className="h-6 w-6 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-800">{lowStockItems.length}</p>
+            )}
           </div>
         </div>
         
@@ -174,6 +238,7 @@ function Kitchen() {
             <button
               onClick={() => setShowAddForm(true)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+              disabled={isLoading}
             >
               <Plus size={20} /> Add New Item
             </button>
@@ -214,7 +279,9 @@ function Kitchen() {
                   onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                 >
                   {categories.map(category => (
-                    <option key={category} value={category}>{category.charAt(0).toUpperCase() + category.slice(1)}</option>
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -268,8 +335,17 @@ function Kitchen() {
               <button
                 type="submit"
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                disabled={isAddingItem}
               >
-                <Plus size={20} /> Add Item
+                {isAddingItem ? (
+                  <>
+                    <Loader size={20} className="animate-spin" /> Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={20} /> Add Item
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -286,52 +362,70 @@ function Kitchen() {
             <div>Actions</div>
           </div>
           
-          {filteredInventory.length === 0 ? (
+          {isLoading ? (
+            <div className="p-12 text-center">
+              <Loader className="h-12 w-12 mx-auto mb-4 text-purple-600 animate-spin" />
+              <p className="text-lg font-medium text-gray-700">Loading inventory...</p>
+            </div>
+          ) : inventoryError ? (
+            <div className="p-12 text-center text-red-500">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+              <p className="text-lg font-medium">Error loading inventory</p>
+              <p className="text-sm">Please try refreshing the page</p>
+              <button 
+                onClick={refetch}
+                className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                <RefreshCw size={16} className="inline mr-2" /> Retry
+              </button>
+            </div>
+          ) : inventory.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
-              <RefreshCw className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <p className="text-lg font-medium">No items found</p>
               <p className="text-sm">Try adjusting your search or filters</p>
             </div>
           ) : (
-            filteredInventory.map(item => (
+            inventory.map(item => (
               <div 
-                key={item.id} 
+                key={item._id} 
                 className={`grid grid-cols-6 gap-4 p-6 border-b border-gray-200 items-center transition-colors ${
                   isLowQuantity(item) ? 'bg-red-50' : ''
                 }`}
               >
-                {editingId === item.id ? (
+                {editingId === item._id ? (
+                  // Edit mode
                   <>
                     <div>
                       <input
                         type="text"
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={editItem.name}
                         onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
                       />
                     </div>
                     <div>
                       <select
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={editItem.category}
                         onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
                       >
                         {categories.map(category => (
-                          <option key={category} value={category}>{category.charAt(0).toUpperCase() + category.slice(1)}</option>
+                          <option key={category} value={category}>{category}</option>
                         ))}
                       </select>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <input
                         type="number"
-                        min="0"
+                        min="0.1"
                         step="0.1"
-                        className="w-20 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="w-16 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={editItem.quantity}
                         onChange={(e) => setEditItem({ ...editItem, quantity: parseFloat(e.target.value) })}
                       />
                       <select
-                        className="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={editItem.unit}
                         onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
                       >
@@ -343,75 +437,98 @@ function Kitchen() {
                     <div>
                       <input
                         type="number"
-                        min="0"
+                        min="0.1"
                         step="0.1"
-                        className="w-20 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                         value={editItem.lowThreshold}
                         onChange={(e) => setEditItem({ ...editItem, lowThreshold: parseFloat(e.target.value) })}
                       />
                     </div>
-                    <div className="col-span-2 flex gap-2">
+                    <div></div>
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={saveEdit}
+                        disabled={isUpdatingItem}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Save changes"
+                        title="Save"
                       >
-                        <Check size={20} />
+                        {isUpdatingItem ? (
+                          <Loader size={20} className="animate-spin" />
+                        ) : (
+                          <Check size={20} />
+                        )}
                       </button>
                       <button
                         onClick={cancelEditing}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Cancel editing"
+                        title="Cancel"
                       >
                         <X size={20} />
                       </button>
                     </div>
                   </>
                 ) : (
+                  // View mode
                   <>
-                    <div className="font-medium flex items-center gap-2 text-gray-800">
-                      {isLowQuantity(item) && (
-                        <AlertCircle size={18} className="text-red-500" />
+                    <div className="font-medium text-gray-800">{item.name}</div>
+                    <div className="capitalize text-gray-600">{item.category}</div>
+                    <div className="text-gray-800">{item.quantity} {item.unit}</div>
+                    <div>
+                      {isLowQuantity(item) ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          <AlertCircle size={16} className="mr-1" /> Low Stock
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          In Stock
+                        </span>
                       )}
-                      {item.name}
                     </div>
-                    <div className="capitalize text-gray-700">{item.category}</div>
-                    <div className="text-gray-800 font-medium">
-                      {item.quantity} {item.unit}
-                    </div>
-                    <div className="text-gray-600">
-                      Alert when below {item.lowThreshold} {item.unit}
-                    </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => decreaseQuantity(item.id)}
+                        onClick={() => decreaseQuantity(item._id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        disabled={isUpdatingQuantity}
                         title="Use Item"
                       >
-                        <Minus size={20} />
+                        {isUpdatingQuantity ? (
+                          <Loader size={20} className="animate-spin" />
+                        ) : (
+                          <Minus size={20} />
+                        )}
                       </button>
                       <button
-                        onClick={() => increaseQuantity(item.id)}
+                        onClick={() => increaseQuantity(item._id)}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        disabled={isUpdatingQuantity}
                         title="Add Stock"
                       >
-                        <Plus size={20} />
+                        {isUpdatingQuantity ? (
+                          <Loader size={20} className="animate-spin" />
+                        ) : (
+                          <Plus size={20} />
+                        )}
                       </button>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center space-x-2">
                       <button
                         onClick={() => startEditing(item)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit item"
+                        title="Edit"
                       >
                         <Edit2 size={20} />
                       </button>
                       <button
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeItem(item._id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete item"
+                        disabled={isDeletingItem}
+                        title="Delete"
                       >
-                        <Trash2 size={20} />
+                        {isDeletingItem ? (
+                          <Loader size={20} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={20} />
+                        )}
                       </button>
                     </div>
                   </>

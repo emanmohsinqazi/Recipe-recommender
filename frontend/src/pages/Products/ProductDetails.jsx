@@ -9,7 +9,7 @@ import {
 import Loader from "../../components/Loader";
 import Message from "../../components/Message";
 import moment from "moment";
-import HeartIcon from "./HeartIcon";
+// import HeartIcon from "./HeartIcon";
 import Ratings from "./Ratings";
 import ProductTabs from "./ProductTabs";
 import { addToCart } from "../../redux/features/cart/cartSlice";
@@ -104,7 +104,7 @@ const ProductDetails = () => {
                   />
                 </div>
                 <div className="absolute top-4 right-4">
-                  <HeartIcon product={product} />
+                  {/* <HeartIcon product={product} /> */}
                 </div>
               </div>
 
