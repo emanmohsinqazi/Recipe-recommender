@@ -1,46 +1,125 @@
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { toast } from "react-toastify"
-import { useLoginMutation } from "../../redux/api/usersApiSlice"
-import { setCredentials } from "../../redux/features/auth/authSlice"
-import Loader from "../../components/Loader"
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // Make sure this is imported
+import { useLoginMutation } from "../../redux/api/usersApiSlice";
+import { setCredentials } from "../../redux/features/auth/authSlice";
+import Loader from "../../components/Loader";
 
 const Login = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const [login, { isLoading }] = useLoginMutation()
-  const { userInfo } = useSelector((state) => state.auth)
-  const { search } = useLocation()
-  const sp = new URLSearchParams(search)
+  const [login, { isLoading }] = useLoginMutation();
+  const { userInfo } = useSelector((state) => state.auth);
+  const { search } = useLocation();
+  const sp = new URLSearchParams(search);
 
-  const defaultRedirect = userInfo?.isAdmin ? "/admin/dashboard" : "/home"
-  const redirect = sp.get("redirect") || defaultRedirect
+  const defaultRedirect = userInfo?.isAdmin ? "/admin/dashboard" : "/home";
+  const redirect = sp.get("redirect") || defaultRedirect;
 
   useEffect(() => {
     if (userInfo) {
-      const targetPath = userInfo.isAdmin ? "/admin/dashboard" : "/home"
-      navigate(sp.get("redirect") || targetPath)
+      const targetPath = userInfo.isAdmin ? "/admin/dashboard" : "/home";
+      navigate(sp.get("redirect") || targetPath);
     }
-  }, [navigate, sp, userInfo])
+  }, [navigate, sp, userInfo]);
+
+  // Validation functions
+  const validateEmail = (email) => {
+    if (!email) return "Email is required";
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return "Password is required";
+    return "";
+  };
+
+  // Validate form on input change
+  const validateForm = () => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+
+    return !emailError && !passwordError;
+  };
+
+  // Check form validity whenever inputs change
+  useEffect(() => {
+    const isValid = !validateEmail(email) && !validatePassword(password);
+    setIsFormValid(isValid);
+  }, [email, password]);
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    setTouched((prev) => ({ ...prev, email: true }));
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    setTouched((prev) => ({ ...prev, password: true }));
+  };
+
+  // Validate on blur
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+
+    if (field === "email") {
+      setErrors((prev) => ({ ...prev, email: validateEmail(email) }));
+    } else if (field === "password") {
+      setErrors((prev) => ({ ...prev, password: validatePassword(password) }));
+    }
+  };
 
   const submitHandler = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
+    // Mark all fields as touched
+    setTouched({
+      email: true,
+      password: true,
+    });
+
+    // Final validation before submission
+    if (!validateForm()) {
+      // Show validation error toast if form is invalid
+      toast.error("Please correct all errors before submitting");
+      return;
+    }
 
     try {
-      const res = await login({ email, password }).unwrap()
-      dispatch(setCredentials({ ...res }))
+      const res = await login({ email, password }).unwrap();
+      dispatch(setCredentials({ ...res }));
 
-      const targetPath = res.isAdmin ? "/admin/dashboard" : "/home"
-      navigate(sp.get("redirect") || targetPath)
+      // Show success toast
+      toast.success("Login successful!");
+
+      const targetPath = res.isAdmin ? "/admin/dashboard" : "/home";
+      navigate(sp.get("redirect") || targetPath);
     } catch (err) {
-      toast.error(err?.data?.message || err.error)
+      console.error("Login error:", err);
+      const errorMessage =
+        err?.data?.error ||
+        err?.data?.message ||
+        "Login failed. Please check your credentials.";
+      toast.error(errorMessage);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-r from-blue-100 to-purple-100">
@@ -48,45 +127,77 @@ const Login = () => {
         {/* Login Form */}
         <div className="w-full md:w-1/2 flex flex-col justify-center">
           <div className="px-8 pt-8 pb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-1">Welcome back</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-1">
+              Welcome back
+            </h1>
             <p className="text-gray-500 mb-6">Please sign in to your account</p>
 
             <form onSubmit={submitHandler}>
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Email Address
                   </label>
                   <input
                     type="email"
                     id="email"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none transition-all duration-200"
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      touched.email && errors.email
+                        ? "border-red-500 focus:ring-red-300 focus:border-red-500"
+                        : "border-gray-300 focus:ring-purple-300 focus:border-purple-500"
+                    } outline-none transition-all duration-200`}
                     placeholder="Enter your email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
+                    onBlur={() => handleBlur("email")}
                     required
                   />
+                  {touched.email && errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-gray-700"
+                    >
                       Password
                     </label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-purple-600 hover:text-purple-800"
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
                   <input
                     type="password"
                     id="password"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-300 focus:border-purple-500 outline-none transition-all duration-200"
+                    className={`w-full px-4 py-3 rounded-lg border ${
+                      touched.password && errors.password
+                        ? "border-red-500 focus:ring-red-300 focus:border-red-500"
+                        : "border-gray-300 focus:ring-purple-300 focus:border-purple-500"
+                    } outline-none transition-all duration-200`}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={handlePasswordChange}
+                    onBlur={() => handleBlur("password")}
                     required
                   />
+                  {touched.password && errors.password && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
 
                 <button
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid}
                   type="submit"
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
@@ -155,31 +266,17 @@ const Login = () => {
 
           {/* Content */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Delicious Recipes Await</h2>
-            <p className="text-white text-lg mb-6">Sign in to discover our collection of amazing recipes</p>
-            {/* <div className="w-32 h-32 mx-auto rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-16 h-16 text-white"
-              >
-                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                <line x1="6" y1="1" x2="6" y2="4"></line>
-                <line x1="10" y1="1" x2="10" y2="4"></line>
-                <line x1="14" y1="1" x2="14" y2="4"></line>
-              </svg>
-            </div> */}
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Delicious Recipes Await
+            </h2>
+            <p className="text-white text-lg mb-6">
+              Sign in to discover our collection of amazing recipes
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
