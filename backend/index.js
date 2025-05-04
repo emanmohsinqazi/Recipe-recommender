@@ -12,6 +12,7 @@ import productRoutes from "./routes/productRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
+import favoriteRoutes from "./routes/favoriteRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT || 3000;
@@ -30,10 +31,11 @@ app.use("/api/category", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/inventory", inventoryRoutes);
-
-
-
+app.use("/api/favorites", favoriteRoutes);
 
 
 
