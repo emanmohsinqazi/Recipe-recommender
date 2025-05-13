@@ -16,15 +16,15 @@ export default function Recipes() {
   const { data: favorites = [], refetch: refetchFavorites } = useGetFavoritesQuery();
 
   const [nutrition, setNutrition] = useState({
-    calories: 0,
-    fat: 0,
-    carbohydrates: 0,
-    protein: 0,
-    cholesterol: 0,
-    sodium: 0,
-    fiber: 0,
+    calories: "",
+    fat: "",
+    carbohydrates: "",
+    protein: "",
+    cholesterol: "",
+    sodium: "",
+    fiber: "",
   });
-  
+
   const nutritionFields = [
     { key: "calories", label: "Calories", unit: "kcal" },
     { key: "protein", label: "Protein", unit: "g" },
@@ -37,25 +37,54 @@ export default function Recipes() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNutrition(prev => ({
+    const numValue = Number(value);
+
+    if (numValue < 0) {
+      toast.warning(`${name.charAt(0).toUpperCase() + name.slice(1)} can't be negative`);
+      return;
+    }
+
+    setNutrition((prev) => ({
       ...prev,
-      [name]: Number(value)
+      [name]: value === "" ? "" : numValue,
     }));
   };
-  
+
+  const handleIngredientsChange = (e) => {
+    const value = e.target.value;
+
+    // Allow only letters, commas, and spaces
+    const isValid = /^[a-zA-Z,\s]*$/.test(value);
+
+    if (isValid) {
+      setIngredients(value);
+    } else {
+      toast.warn("Ingredients should contain only letters, commas, and spaces.");
+    }
+  };
+
   const handleRecommend = async () => {
     try {
       setIsLoading(true);
       setError("");
-      const inputIngredients = ingredients.split(",").map((item) => item.trim());
+
+      if (!ingredients.trim()) {
+        toast.error("Please enter at least one ingredient.");
+        setIsLoading(false);
+        return;
+      }
+
+      const inputIngredients = ingredients.split(",").map((item) => item.trim()).filter(Boolean);
+
       const response = await axios.post("http://127.0.0.1:5000/api/recommend", {
         ingredients: inputIngredients,
         ...nutrition,
       });
+
       setRecipes(response.data);
-      setIsLoading(false);
     } catch (err) {
       setError("Error fetching recommendations. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -67,9 +96,9 @@ export default function Recipes() {
   };
 
   const handleToggleFavorite = async (e, recipe) => {
-    e.preventDefault(); // Prevent any navigation
-    e.stopPropagation(); // Stop event from bubbling to parent
-  
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
       const recipeData = {
         recipe_name: recipe.recipe_name,
@@ -83,27 +112,25 @@ export default function Recipes() {
           fat: recipe.nutrition?.fat || 0,
           fiber: recipe.nutrition?.fiber || 0,
           sodium: recipe.nutrition?.sodium || 0,
-          cholesterol: recipe.nutrition?.cholesterol || 0
-        }
+          cholesterol: recipe.nutrition?.cholesterol || 0,
+        },
       };
 
       const result = await toggleFavorite(recipeData).unwrap();
-      
-      // Force a refresh of favorites
+
       await refetchFavorites();
-      
+
       toast.success(
-        result.isFavorite 
-          ? 'Recipe added to favorites' 
-          : 'Recipe removed from favorites'
+        result.isFavorite
+          ? "Recipe added to favorites"
+          : "Recipe removed from favorites"
       );
     } catch (err) {
-      console.error('Failed to toggle favorite:', err);
-      toast.error('Failed to update favorites');
+      console.error("Failed to toggle favorite:", err);
+      toast.error("Failed to update favorites");
     }
   };
 
-  // Added missing toggleSection function
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -118,13 +145,10 @@ export default function Recipes() {
           Enter your ingredients and nutritional preferences to discover delicious recipes tailored just for you
         </p>
       </div>
-      
-      {/* Main Content Container */}
+
       <div className="bg-white/20 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-xl">
-        {/* Form Section */}
         <div className="max-w-3xl mx-auto mb-10">
           <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-md">
-            {/* Ingredients Input */}
             <div className="mb-6">
               <label className="block font-medium text-gray-700 mb-2">
                 What ingredients do you have?
@@ -133,7 +157,7 @@ export default function Recipes() {
                 <input
                   type="text"
                   value={ingredients}
-                  onChange={(e) => setIngredients(e.target.value)}
+                  onChange={handleIngredientsChange}
                   placeholder="Enter ingredients separated by commas"
                   className="border border-gray-200 p-4 pl-12 w-full rounded-xl bg-white/70 text-gray-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
                 />
@@ -144,21 +168,20 @@ export default function Recipes() {
               </p>
             </div>
 
-            {/* Nutrition Accordion */}
             <div className="mb-6">
               <button
-                onClick={() => toggleSection('nutrition')}
+                onClick={() => toggleSection("nutrition")}
                 className="flex items-center justify-between w-full p-4 bg-purple-50 rounded-xl text-gray-700 font-medium"
               >
                 <span>Nutritional Requirements</span>
-                <ChevronDown 
+                <ChevronDown
                   className={`h-5 w-5 text-purple-500 transition-transform ${
-                    expandedSection === 'nutrition' ? 'transform rotate-180' : ''
-                  }`} 
+                    expandedSection === "nutrition" ? "transform rotate-180" : ""
+                  }`}
                 />
               </button>
-              
-              {expandedSection === 'nutrition' && (
+
+              {expandedSection === "nutrition" && (
                 <div className="mt-4 p-4 bg-white/50 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {nutritionFields.map(({ key, label, unit }) => (
                     <div key={key} className="mb-2">
@@ -171,6 +194,7 @@ export default function Recipes() {
                         value={nutrition[key]}
                         onChange={handleInputChange}
                         className="border border-gray-200 p-3 w-full rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
+                        placeholder={`e.g. 200`}
                       />
                     </div>
                   ))}
@@ -178,7 +202,6 @@ export default function Recipes() {
               )}
             </div>
 
-            {/* Submit Button */}
             <button
               onClick={handleRecommend}
               disabled={isLoading}
@@ -196,12 +219,11 @@ export default function Recipes() {
           </div>
         </div>
 
-        {/* Recipes Section */}
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
             {recipes.length > 0 ? "Recommended Recipes" : "Your Recommendations"}
           </h2>
-            
+
           {error && (
             <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-lg max-w-3xl mx-auto">
               <div className="flex items-center">
@@ -210,7 +232,7 @@ export default function Recipes() {
               </div>
             </div>
           )}
-            
+
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="animate-spin h-12 w-12 text-purple-600 mb-4" />
@@ -250,7 +272,7 @@ export default function Recipes() {
                       <p className="text-gray-500 italic">No image available</p>
                     </div>
                   )}
-                  
+
                   <div className="p-5 relative">
                     <button
                       className="absolute top-5 right-5 p-2 rounded-full bg-white/80 hover:bg-white transition-colors duration-200"
@@ -264,18 +286,18 @@ export default function Recipes() {
                         }`}
                       />
                     </button>
-                    
+
                     <h3 className="text-xl font-bold text-gray-800 mb-2 pr-10">
                       {recipe.recipe_name}
                     </h3>
-                    
+
                     {recipe.ingredients && (
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {recipe.ingredients.slice(0, 3).join(", ")}
                         {recipe.ingredients.length > 3 && "..."}
                       </p>
                     )}
-                    
+
                     <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
                       <div className="flex space-x-2">
                         {recipe.calories && (

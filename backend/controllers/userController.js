@@ -309,6 +309,18 @@ const updateUserById = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: error.message || "Error updating user" });
   }
+    // Generate a token
+      const token = createToken(user);
+  
+      // Fetch the chat history for the logged-in user
+      const chatHistory = await Chat.find({ userId: user._id }).sort({ timestamp: -1 });
+  
+      // Send the token and chat history to the client
+      res.json({
+        // **message: "Login successful",**
+        token,
+        chatHistory,
+      });
 });
 
 export {

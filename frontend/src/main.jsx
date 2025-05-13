@@ -27,7 +27,7 @@ import Cart from "./pages/Cart.jsx";
 import Shop from "./pages/Shop.jsx";
 import ProductDetails from "./pages/Products/ProductDetails.jsx";
 import Recipes from "./pages/Recipes.jsx";
-import RecipeDetails from "./pages/RecipeDetails.jsx"; // ✅ Added RecipeDetails page
+import RecipeDetails from "./pages/RecipeDetails.jsx";
 import Shipping from "./pages/Orders/Shipping.jsx";
 import Order from "./pages/Orders/Order.jsx";
 import Checkout from "./pages/Orders/Checkout.jsx";
@@ -52,7 +52,7 @@ const router = createBrowserRouter(
       <Route path="" element={<PrivateRoute />}>
         <Route path="/profile" element={<Profile />} />
         <Route path="/recipes" element={<Recipes />} />
-        <Route path="/recipe/:id" element={<RecipeDetails />} /> {/* ✅ Added new route */}
+        <Route path="/recipe/:id" element={<RecipeDetails />} />
         <Route path="/kitchen" element={<Kitchen />} />
         <Route path="/chatbot" element={<ChatBot />} />
         <Route path="/favorite" element={<FavoriteRecipes />} />

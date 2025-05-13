@@ -1,10 +1,7 @@
-"use client"
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 
-// Import Lucide icons - make sure to install with: npm install lucide-react
 import { ChefHat, ShoppingCart, LayoutGrid, Bot } from "lucide-react"
 
 const Card = ({ title, description, icon, route }) => {
@@ -13,23 +10,24 @@ const Card = ({ title, description, icon, route }) => {
 
   return (
     <div
-      className="relative bg-white/20 backdrop-blur-sm p-8 rounded-xl shadow-lg cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:bg-white/30 overflow-hidden group"
+      className="relative bg-white/20 backdrop-blur-md p-8 rounded-2xl shadow-lg cursor-pointer transition-all duration-300 ease-in-out hover:shadow-2xl hover:bg-white/30 overflow-hidden group h-full"
       onClick={() => navigate(route)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-purple-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-purple-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
 
-      <div className="relative z-10">
-        <div className="flex justify-center mb-6">
-          <div className="text-5xl bg-white/30 p-4 rounded-full shadow-md">{icon}</div>
+      <div className="relative z-10 flex flex-col justify-between h-full">
+        <div className="flex flex-col items-center">
+          <div className="text-5xl bg-white/30 p-4 rounded-full shadow-md mb-6">
+            {icon}
+          </div>
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-3">{title}</h2>
+          <p className="text-gray-700 text-center">{description}</p>
         </div>
 
-        <h2 className="text-2xl font-bold mb-3 text-center text-gray-800">{title}</h2>
-        <p className="text-gray-700 text-center mb-4">{description}</p>
-
         <div
-          className={`flex justify-center items-center transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}
+          className={`flex justify-center items-center transition-opacity duration-300 mt-6 ${isHovered ? "opacity-100" : "opacity-0"}`}
         >
           <span className="text-purple-800 font-medium flex items-center">
             Explore <ArrowRight className="ml-1 h-4 w-4" />
@@ -43,7 +41,7 @@ const Card = ({ title, description, icon, route }) => {
 const Home = () => {
   const features = [
     {
-      title: "Recipe Recommendation",
+      title: "Recipe  Recommendation",
       description: "Discover new recipes tailored to your preferences and dietary needs.",
       icon: <ChefHat className="h-8 w-8 text-purple-700" />,
       route: "/recipes",
