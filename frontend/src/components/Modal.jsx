@@ -1,6 +1,4 @@
-
-
-import { X } from "lucide-react"
+import { X } from "lucide-react";
 
 const Modal = ({ isOpen, onClose, children, title }) => {
   return (
@@ -10,7 +8,9 @@ const Modal = ({ isOpen, onClose, children, title }) => {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
           <div className="bg-white/90 rounded-xl shadow-lg w-full max-w-md mx-4 z-10 overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800">{title || "Edit Category"}</h3>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {title || "Edit Category"}
+              </h3>
               <button
                 className="p-1 rounded-full hover:bg-gray-100 transition-colors"
                 onClick={onClose}
@@ -24,7 +24,7 @@ const Modal = ({ isOpen, onClose, children, title }) => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default Modal
+export default Modal;

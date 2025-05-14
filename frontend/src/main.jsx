@@ -37,6 +37,7 @@ import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
 import Kitchen from "./pages/Kitchen.jsx";
 import ChatBot from "./pages/ChatBot.jsx";
 import FavoriteRecipes from "./pages/FavoriteRecipes.jsx";
+import FavoriteRecipesDetail from "./pages/FavoriteRecipesDetail.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -53,6 +54,8 @@ const router = createBrowserRouter(
         <Route path="/profile" element={<Profile />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/recipe/:id" element={<RecipeDetails />} />
+        <Route path="/favoriterecipedetail/:id" element={<FavoriteRecipesDetail/>} /> 
+
         <Route path="/kitchen" element={<Kitchen />} />
         <Route path="/chatbot" element={<ChatBot />} />
         <Route path="/favorite" element={<FavoriteRecipes />} />

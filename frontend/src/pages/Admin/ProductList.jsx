@@ -6,7 +6,7 @@ import {
 } from "../../redux/api/productApiSlice";
 import { useFetchCategoriesQuery } from "../../redux/api/categoryApiSlice";
 import { toast } from "react-toastify";
-import AdminMenu from "./AdminMenu";
+// import AdminMenu from "./AdminMenu";
 import { Upload } from "lucide-react";
 
 const ProductList = () => {
@@ -78,7 +78,7 @@ const ProductList = () => {
     >
       <div className="container mx-auto max-w-5xl">
         <div className="flex flex-col md:flex-row gap-6 justify-center">
-          <AdminMenu />
+          {/* <AdminMenu /> */}
           <div className="w-full md:w-3/4 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
             <h2 className="text-2xl font-bold text-gray-800 border-b border-gray-200 pb-4 mb-6">
               Create Product

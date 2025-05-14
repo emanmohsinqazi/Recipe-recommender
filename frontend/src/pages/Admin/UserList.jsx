@@ -1,79 +1,84 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { toast } from "react-toastify"
-import Message from "../../components/Message"
-import Loader from "../../components/Loader"
-import { useDeleteUserMutation, useGetUsersQuery, useUpdateUserMutation } from "../../redux/api/usersApiSlice"
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import Message from "../../components/Message";
+import Loader from "../../components/Loader";
+import {
+  useDeleteUserMutation,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+} from "../../redux/api/usersApiSlice";
 // import AdminMenu from "./AdminMenu";
-import { CheckCircle, X, Trash2, Edit2, Save, Mail } from "lucide-react"
+import { CheckCircle, X, Trash2, Edit2, Save, Mail } from "lucide-react";
 
 const UserList = () => {
-  const { data: users, refetch, isLoading, error } = useGetUsersQuery()
+  const { data: users, refetch, isLoading, error } = useGetUsersQuery();
 
-  const [deleteUser] = useDeleteUserMutation()
+  const [deleteUser] = useDeleteUserMutation();
 
-  const [editableUserId, setEditableUserId] = useState(null)
-  const [editableUserName, setEditableUserName] = useState("")
-  const [editableUserEmail, setEditableUserEmail] = useState("")
+  const [editableUserId, setEditableUserId] = useState(null);
+  const [editableUserName, setEditableUserName] = useState("");
+  const [editableUserEmail, setEditableUserEmail] = useState("");
 
-  const [updateUser] = useUpdateUserMutation()
+  const [updateUser] = useUpdateUserMutation();
 
   useEffect(() => {
-    refetch()
-  }, [refetch])
+    refetch();
+  }, [refetch]);
 
   const deleteHandler = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const toastId = toast.loading("Deleting user...")
-        await deleteUser(id)
-        refetch()
+        const toastId = toast.loading("Deleting user...");
+        await deleteUser(id);
+        refetch();
         toast.update(toastId, {
           render: "User deleted successfully",
           type: "success",
           isLoading: false,
           autoClose: 3000,
-        })
+        });
       } catch (err) {
-        toast.error(err?.data?.message || err.error)
+        toast.error(err?.data?.message || err.error);
       }
     }
-  }
+  };
 
   const toggleEdit = (id, username, email) => {
-    setEditableUserId(id)
-    setEditableUserName(username)
-    setEditableUserEmail(email)
-  }
+    setEditableUserId(id);
+    setEditableUserName(username);
+    setEditableUserEmail(email);
+  };
 
   const cancelEdit = () => {
-    setEditableUserId(null)
-  }
+    setEditableUserId(null);
+  };
 
   const updateHandler = async (id) => {
     try {
-      const toastId = toast.loading("Updating user...")
+      const toastId = toast.loading("Updating user...");
       await updateUser({
         userId: id,
         username: editableUserName,
         email: editableUserEmail,
-      })
-      setEditableUserId(null)
-      refetch()
+      });
+      setEditableUserId(null);
+      refetch();
       toast.update(toastId, {
         render: "User updated successfully",
         type: "success",
         isLoading: false,
         autoClose: 3000,
-      })
+      });
     } catch (err) {
-      toast.error(err?.data?.message || err.error)
+      toast.error(err?.data?.message || err.error);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen py-6" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+    <div
+      className="min-h-screen py-6"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
       <div className="container mx-auto pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-full">
@@ -101,7 +106,9 @@ const UserList = () => {
                   <Loader />
                 </div>
               ) : error ? (
-                <Message variant="error">{error?.data?.message || error.error}</Message>
+                <Message variant="error">
+                  {error?.data?.message || error.error}
+                </Message>
               ) : users?.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
                   <p className="text-gray-700">No users found</p>
@@ -111,18 +118,30 @@ const UserList = () => {
                   <table className="w-full border-collapse">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 py-3 text-left text-gray-700 font-medium">ID</th>
-                        <th className="px-4 py-3 text-left text-gray-700 font-medium">Name</th>
-                        <th className="px-4 py-3 text-left text-gray-700 font-medium">Email</th>
-                        <th className="px-4 py-3 text-left text-gray-700 font-medium">Admin</th>
-                        <th className="px-4 py-3 text-left text-gray-700 font-medium">Actions</th>
+                        <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                          ID
+                        </th>
+                        <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                          Admin
+                        </th>
+                        <th className="px-4 py-3 text-left text-gray-700 font-medium">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
 
                     <tbody className="divide-y">
                       {users.map((user) => (
                         <tr key={user._id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-gray-800 font-mono text-sm">{user._id.substring(0, 8)}...</td>
+                          <td className="px-4 py-3 text-gray-800 font-mono text-sm">
+                            {user._id.substring(0, 8)}...
+                          </td>
 
                           <td className="px-4 py-3 text-gray-800">
                             {editableUserId === user._id ? (
@@ -130,14 +149,18 @@ const UserList = () => {
                                 <input
                                   type="text"
                                   value={editableUserName}
-                                  onChange={(e) => setEditableUserName(e.target.value)}
+                                  onChange={(e) =>
+                                    setEditableUserName(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                   placeholder="Enter name"
                                 />
                               </div>
                             ) : (
                               <div className="flex items-center">
-                                <span className="font-medium">{user.username}</span>
+                                <span className="font-medium">
+                                  {user.username}
+                                </span>
                               </div>
                             )}
                           </td>
@@ -148,7 +171,9 @@ const UserList = () => {
                                 <input
                                   type="email"
                                   value={editableUserEmail}
-                                  onChange={(e) => setEditableUserEmail(e.target.value)}
+                                  onChange={(e) =>
+                                    setEditableUserEmail(e.target.value)
+                                  }
                                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                   placeholder="Enter email"
                                 />
@@ -201,7 +226,13 @@ const UserList = () => {
                             ) : (
                               <div className="flex space-x-2">
                                 <button
-                                  onClick={() => toggleEdit(user._id, user.username, user.email)}
+                                  onClick={() =>
+                                    toggleEdit(
+                                      user._id,
+                                      user.username,
+                                      user.email
+                                    )
+                                  }
                                   className="inline-flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors text-sm font-medium"
                                 >
                                   <Edit2 size={14} className="mr-1" />
@@ -231,7 +262,7 @@ const UserList = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserList
+export default UserList;

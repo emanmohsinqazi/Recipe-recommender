@@ -1,17 +1,18 @@
-"use client"
-
-import { Link } from "react-router-dom"
-import moment from "moment"
-import { useAllProductsQuery } from "../../redux/api/productApiSlice"
-import Loader from "../../components/Loader"
-import Message from "../../components/Message"
-import { Edit2, Calendar, DollarSign, Tag, Eye } from "lucide-react"
+import { Link } from "react-router-dom";
+import moment from "moment";
+import { useAllProductsQuery } from "../../redux/api/productApiSlice";
+import Loader from "../../components/Loader";
+import Message from "../../components/Message";
+import { Edit2, Calendar, DollarSign, Tag, Eye } from "lucide-react";
 
 const AllProducts = () => {
-  const { data: products, isLoading, isError, error } = useAllProductsQuery()
+  const { data: products, isLoading, isError, error } = useAllProductsQuery();
 
   return (
-    <div className="min-h-screen py-6" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+    <div
+      className="min-h-screen py-6"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
       <div className="container mx-auto pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="md:w-full">
@@ -44,7 +45,9 @@ const AllProducts = () => {
                   <Loader />
                 </div>
               ) : isError ? (
-                <Message variant="error">{error?.data?.message || "Error loading products"}</Message>
+                <Message variant="error">
+                  {error?.data?.message || "Error loading products"}
+                </Message>
               ) : products?.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
                   <p className="text-gray-700">No products found</p>
@@ -67,10 +70,14 @@ const AllProducts = () => {
                         <div className="p-5 flex flex-col justify-between flex-grow">
                           <div>
                             <div className="flex flex-wrap justify-between items-start mb-2">
-                              <h3 className="text-xl font-semibold text-gray-800">{product.name}</h3>
+                              <h3 className="text-xl font-semibold text-gray-800">
+                                {product.name}
+                              </h3>
                               <div className="flex items-center text-gray-500 text-sm">
                                 <Calendar size={14} className="mr-1" />
-                                {moment(product.createdAt).format("MMMM Do YYYY")}
+                                {moment(product.createdAt).format(
+                                  "MMMM Do YYYY"
+                                )}
                               </div>
                             </div>
 
@@ -80,7 +87,8 @@ const AllProducts = () => {
                                 {product.category?.name || "Uncategorized"}
                               </span>
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <DollarSign size={12} className="mr-1" />${product.price}
+                                <DollarSign size={12} className="mr-1" />$
+                                {product.price}
                               </span>
                               {product.countInStock > 0 ? (
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -93,7 +101,9 @@ const AllProducts = () => {
                               )}
                             </div>
 
-                            <p className="text-gray-600 mb-4 line-clamp-3">{product.description}</p>
+                            <p className="text-gray-600 mb-4 line-clamp-3">
+                              {product.description}
+                            </p>
                           </div>
 
                           <div className="flex flex-wrap justify-between items-center mt-4">
@@ -104,7 +114,6 @@ const AllProducts = () => {
                               <Edit2 size={16} className="mr-2" />
                               Update Product
                             </Link>
-                            
                           </div>
                         </div>
                       </div>
@@ -117,7 +126,7 @@ const AllProducts = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AllProducts
+export default AllProducts;

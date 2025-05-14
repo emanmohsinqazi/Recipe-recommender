@@ -99,7 +99,7 @@ const Navigation = () => {
               <div className="icon-wrapper">
                 <div className="relative">
                   <AiOutlineShoppingCart className={iconClass} size={22} />
-                  <span className="cart-badge">0</span>
+                  {/* <span className="cart-badge">0</span> */}
                 </div>
               </div>
               <span className={textClass}>Cart</span>

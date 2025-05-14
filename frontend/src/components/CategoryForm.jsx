@@ -1,6 +1,10 @@
-"use client"
-
-const CategoryForm = ({ value, setValue, handleSubmit, buttonText = "Submit", handleDelete }) => {
+const CategoryForm = ({
+  value,
+  setValue,
+  handleSubmit,
+  buttonText = "Submit",
+  handleDelete,
+}) => {
   return (
     <div className="p-3">
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -32,7 +36,7 @@ const CategoryForm = ({ value, setValue, handleSubmit, buttonText = "Submit", ha
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default CategoryForm
+export default CategoryForm;

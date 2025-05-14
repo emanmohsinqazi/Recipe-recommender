@@ -1,9 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Heart, Search, ChevronDown, X, Loader2, ChefHat } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { useToggleFavoriteMutation, useGetFavoritesQuery } from "../redux/api/favoriteApiSlice";
+import { Heart, Search, ChevronDown, X, Loader2, ChefHat } from "lucide-react";
+import { toast } from "react-toastify";
+import {
+  useToggleFavoriteMutation,
+  useGetFavoritesQuery,
+} from "../redux/api/favoriteApiSlice";
 
 export default function Recipes() {
   const navigate = useNavigate();
@@ -13,7 +16,8 @@ export default function Recipes() {
   const [error, setError] = useState("");
   const [expandedSection, setExpandedSection] = useState(null);
   const [toggleFavorite] = useToggleFavoriteMutation();
-  const { data: favorites = [], refetch: refetchFavorites } = useGetFavoritesQuery();
+  const { data: favorites = [], refetch: refetchFavorites } =
+    useGetFavoritesQuery();
 
   const [nutrition, setNutrition] = useState({
     calories: "",
@@ -40,7 +44,9 @@ export default function Recipes() {
     const numValue = Number(value);
 
     if (numValue < 0) {
-      toast.warning(`${name.charAt(0).toUpperCase() + name.slice(1)} can't be negative`);
+      toast.warning(
+        `${name.charAt(0).toUpperCase() + name.slice(1)} can't be negative`
+      );
       return;
     }
 
@@ -59,7 +65,9 @@ export default function Recipes() {
     if (isValid) {
       setIngredients(value);
     } else {
-      toast.warn("Ingredients should contain only letters, commas, and spaces.");
+      toast.warn(
+        "Ingredients should contain only letters, commas, and spaces."
+      );
     }
   };
 
@@ -74,7 +82,10 @@ export default function Recipes() {
         return;
       }
 
-      const inputIngredients = ingredients.split(",").map((item) => item.trim()).filter(Boolean);
+      const inputIngredients = ingredients
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
       const response = await axios.post("http://127.0.0.1:5000/api/recommend", {
         ingredients: inputIngredients,
@@ -102,10 +113,10 @@ export default function Recipes() {
     try {
       const recipeData = {
         recipe_name: recipe.recipe_name,
-        image_url: recipe.image_url || '',
-        ingredients: recipe.ingredients || [],
-        calories: recipe.calories || 0,
-        instructions: recipe.instructions || [],
+        image_url: recipe.image_url || "",
+        ingredients: recipe.ingredients_list || [],
+        calories: recipe.nutrition?.calories || 0,
+        instructions: recipe.ingredient_quantity_list || [],
         nutrition: {
           protein: recipe.nutrition?.protein || 0,
           carbohydrates: recipe.nutrition?.carbohydrates || 0,
@@ -142,7 +153,8 @@ export default function Recipes() {
           Recipe Recommender
         </h1>
         <p className="text-gray-700 max-w-2xl mx-auto">
-          Enter your ingredients and nutritional preferences to discover delicious recipes tailored just for you
+          Enter your ingredients and nutritional preferences to discover
+          delicious recipes tailored just for you
         </p>
       </div>
 
@@ -176,7 +188,9 @@ export default function Recipes() {
                 <span>Nutritional Requirements</span>
                 <ChevronDown
                   className={`h-5 w-5 text-purple-500 transition-transform ${
-                    expandedSection === "nutrition" ? "transform rotate-180" : ""
+                    expandedSection === "nutrition"
+                      ? "transform rotate-180"
+                      : ""
                   }`}
                 />
               </button>
@@ -221,7 +235,9 @@ export default function Recipes() {
 
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
-            {recipes.length > 0 ? "Recommended Recipes" : "Your Recommendations"}
+            {recipes.length > 0
+              ? "Recommended Recipes"
+              : "Your Recommendations"}
           </h2>
 
           {error && (
@@ -236,7 +252,9 @@ export default function Recipes() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="animate-spin h-12 w-12 text-purple-600 mb-4" />
-              <p className="text-gray-600">Finding the perfect recipes for you...</p>
+              <p className="text-gray-600">
+                Finding the perfect recipes for you...
+              </p>
             </div>
           ) : recipes.length === 0 ? (
             <div className="bg-white/50 backdrop-blur-sm p-8 rounded-xl text-center max-w-3xl mx-auto">
@@ -247,7 +265,8 @@ export default function Recipes() {
                 No recommendations available yet.
               </p>
               <p className="text-gray-500">
-                Enter your ingredients and nutritional preferences to get personalized recipe recommendations.
+                Enter your ingredients and nutritional preferences to get
+                personalized recipe recommendations.
               </p>
             </div>
           ) : (
@@ -280,7 +299,9 @@ export default function Recipes() {
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          favorites.some((fav) => fav.recipe_name === recipe.recipe_name)
+                          favorites.some(
+                            (fav) => fav.recipe_name === recipe.recipe_name
+                          )
                             ? "text-red-500 fill-red-500"
                             : "text-gray-400"
                         }`}

@@ -1,130 +1,132 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useUpdateProductMutation,
   useDeleteProductMutation,
   useGetProductByIdQuery,
   useUploadProductImageMutation,
-} from "../../redux/api/productApiSlice"
-import { useFetchCategoriesQuery } from "../../redux/api/categoryApiSlice"
-import { toast } from "react-toastify"
+} from "../../redux/api/productApiSlice";
+import { useFetchCategoriesQuery } from "../../redux/api/categoryApiSlice";
+import { toast } from "react-toastify";
 
 const AdminProductUpdate = () => {
-  const params = useParams()
+  const params = useParams();
 
-  const { data: productData } = useGetProductByIdQuery(params._id)
+  const { data: productData } = useGetProductByIdQuery(params._id);
 
-  const [image, setImage] = useState(productData?.image || "")
-  const [name, setName] = useState(productData?.name || "")
-  const [description, setDescription] = useState(productData?.description || "")
-  const [price, setPrice] = useState(productData?.price || "")
-  const [category, setCategory] = useState(productData?.category || "")
-  const [quantity, setQuantity] = useState(productData?.quantity || "")
-  const [brand, setBrand] = useState(productData?.brand || "")
-  const [stock, setStock] = useState(productData?.countInStock)
+  const [image, setImage] = useState(productData?.image || "");
+  const [name, setName] = useState(productData?.name || "");
+  const [description, setDescription] = useState(
+    productData?.description || ""
+  );
+  const [price, setPrice] = useState(productData?.price || "");
+  const [category, setCategory] = useState(productData?.category || "");
+  const [quantity, setQuantity] = useState(productData?.quantity || "");
+  const [brand, setBrand] = useState(productData?.brand || "");
+  const [stock, setStock] = useState(productData?.countInStock);
 
   // hook
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // Fetch categories using RTK Query
-  const { data: categories = [] } = useFetchCategoriesQuery()
+  const { data: categories = [] } = useFetchCategoriesQuery();
 
-  const [uploadProductImage] = useUploadProductImageMutation()
+  const [uploadProductImage] = useUploadProductImageMutation();
 
   // Define the update product mutation
-  const [updateProduct] = useUpdateProductMutation()
+  const [updateProduct] = useUpdateProductMutation();
 
   // Define the delete product mutation
-  const [deleteProduct] = useDeleteProductMutation()
+  const [deleteProduct] = useDeleteProductMutation();
 
   useEffect(() => {
     if (productData && productData._id) {
-      setName(productData.name)
-      setDescription(productData.description)
-      setPrice(productData.price)
-      setCategory(productData.category?._id)
-      setQuantity(productData.quantity)
-      setBrand(productData.brand)
-      setImage(productData.image)
+      setName(productData.name);
+      setDescription(productData.description);
+      setPrice(productData.price);
+      setCategory(productData.category?._id);
+      setQuantity(productData.quantity);
+      setBrand(productData.brand);
+      setImage(productData.image);
     }
-  }, [productData])
+  }, [productData]);
 
   const uploadFileHandler = async (e) => {
-    const formData = new FormData()
-    formData.append("image", e.target.files[0])
+    const formData = new FormData();
+    formData.append("image", e.target.files[0]);
     try {
-      const res = await uploadProductImage(formData).unwrap()
+      const res = await uploadProductImage(formData).unwrap();
       toast.success("Image uploaded successfully", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      })
-      setImage(res.image)
+      });
+      setImage(res.image);
     } catch (err) {
       toast.error("Image upload failed", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      })
+      });
     }
-  }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const formData = new FormData()
-      formData.append("image", image)
-      formData.append("name", name)
-      formData.append("description", description)
-      formData.append("price", price)
-      formData.append("category", category)
-      formData.append("quantity", quantity)
-      formData.append("brand", brand)
-      formData.append("countInStock", stock)
+      const formData = new FormData();
+      formData.append("image", image);
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("price", price);
+      formData.append("category", category);
+      formData.append("quantity", quantity);
+      formData.append("brand", brand);
+      formData.append("countInStock", stock);
 
       // Update product using the RTK Query mutation
-      const data = await updateProduct({ productId: params._id, formData })
+      const data = await updateProduct({ productId: params._id, formData });
 
       if (data?.error) {
         toast.error(data.error, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
-        })
+        });
       } else {
         toast.success(`Product successfully updated`, {
           position: toast.POSITION.TOP_RIGHT,
           autoClose: 2000,
-        })
-        navigate("/admin/allproductslist")
+        });
+        navigate("/admin/allproductslist");
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       toast.error("Product update failed. Try again.", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      })
+      });
     }
-  }
+  };
 
   const handleDelete = async () => {
     try {
-      const answer = window.confirm("Are you sure you want to delete this product?")
-      if (!answer) return
+      const answer = window.confirm(
+        "Are you sure you want to delete this product?"
+      );
+      if (!answer) return;
 
-      const { data } = await deleteProduct(params._id)
+      const { data } = await deleteProduct(params._id);
       toast.success(`"${data.name}" is deleted`, {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      })
-      navigate("/admin/allproductslist")
+      });
+      navigate("/admin/allproductslist");
     } catch (err) {
-      console.log(err)
+      console.log(err);
       toast.error("Delete failed. Try again.", {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: 2000,
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-100 to-purple-100">
@@ -168,7 +170,9 @@ const AdminProductUpdate = () => {
 
                 {/* Image Upload */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Image
+                  </label>
                   <div className="flex items-center justify-center w-full">
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-200">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -187,9 +191,12 @@ const AdminProductUpdate = () => {
                           ></path>
                         </svg>
                         <p className="mb-1 text-sm text-gray-500">
-                          <span className="font-semibold">Click to upload</span> or drag and drop
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
                         </p>
-                        <p className="text-xs text-gray-500">PNG, JPG or GIF (MAX. 800x400px)</p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG or GIF (MAX. 800x400px)
+                        </p>
                       </div>
                       <input
                         type="file"
@@ -206,7 +213,10 @@ const AdminProductUpdate = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {/* Name */}
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="name"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Product Name
                       </label>
                       <input
@@ -221,7 +231,10 @@ const AdminProductUpdate = () => {
 
                     {/* Price */}
                     <div>
-                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="price"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Price ($)
                       </label>
                       <input
@@ -236,7 +249,10 @@ const AdminProductUpdate = () => {
 
                     {/* Quantity */}
                     <div>
-                      <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="quantity"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Quantity
                       </label>
                       <input
@@ -252,7 +268,10 @@ const AdminProductUpdate = () => {
 
                     {/* Brand */}
                     <div>
-                      <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="brand"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Brand
                       </label>
                       <input
@@ -266,7 +285,10 @@ const AdminProductUpdate = () => {
 
                     {/* Count In Stock */}
                     <div>
-                      <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="stock"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Count In Stock
                       </label>
                       <input
@@ -281,7 +303,10 @@ const AdminProductUpdate = () => {
 
                     {/* Category */}
                     <div>
-                      <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="category"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Category
                       </label>
                       <select
@@ -303,7 +328,10 @@ const AdminProductUpdate = () => {
 
                   {/* Description */}
                   <div className="mb-6">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Description
                     </label>
                     <textarea
@@ -390,7 +418,7 @@ const AdminProductUpdate = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminProductUpdate
+export default AdminProductUpdate;
