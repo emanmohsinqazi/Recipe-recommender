@@ -15,7 +15,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import favoriteRoutes from "./routes/favoriteRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js"; // 👈 NEW
+import chatRoutes from "./routes/chatRoutes.js"; 
 import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();

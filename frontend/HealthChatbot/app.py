@@ -23,7 +23,10 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from openai import OpenAI
-
+from flask import Flask, request, jsonify, session
+from datetime import datetime
+import os
+from bson.objectid import ObjectId
 # === Setup === #
 load_dotenv()
 # MongoDB Connection
@@ -44,7 +47,7 @@ Session(app)
 os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY")
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
-# === Load and preprocess dataset === #
+ #=== Load and preprocess dataset === #
 dataset = pd.read_csv("cleaned_dataset.csv")
 
 def preprocess_data(dataset):
@@ -57,6 +60,7 @@ def preprocess_data(dataset):
 
 processed_dataset, scaler = preprocess_data(dataset)
 
+# Create ingredient index map for vectorization
 ingredient_index_map = {
     ingredient: idx for idx, ingredient in enumerate(
         set(ingredient for ingredients in processed_dataset['ingredients_list'] for ingredient in ingredients)
@@ -78,29 +82,39 @@ def find_closest_nutrition(scaled_values, scaler, dataset, nutritional_columns):
         closest_values[col] = int(round(closest_value))
     return closest_values
 
+def count_matching_ingredients(row_ingredients, input_ingredients_clean):
+    return sum(1 for ingredient in input_ingredients_clean if ingredient in row_ingredients)
+
 def recommend_recipes(input_ingredients, input_nutri, dataset, scaler, ingredient_index_map):
     input_vector = vectorize_ingredients(input_ingredients, ingredient_index_map)
     input_nutri_scaled = scaler.transform([input_nutri])
-    input_features = np.hstack([input_vector, input_nutri_scaled.flatten()])
+    input_ingredients_clean = [ingredient.lower().strip() for ingredient in input_ingredients]
+    nutritional_columns = ['calories', 'fat', 'carbohydrates', 'protein', 'cholesterol', 'sodium', 'fiber']
 
-    def contains_all_ingredients(row, input_ingredients):
-        return all(ingredient in row['ingredients_list'] for ingredient in input_ingredients)
+    # Filter recipes with at least one matching ingredient
+    dataset['matching_count'] = dataset['ingredients_list'].apply(
+        lambda ingredients: count_matching_ingredients([i.lower().strip() for i in ingredients], input_ingredients_clean)
+    )
 
-    filtered_recipes = dataset[dataset.apply(lambda row: contains_all_ingredients(row, input_ingredients), axis=1)]
+    filtered_recipes = dataset[dataset['matching_count'] > 0]
 
     if filtered_recipes.empty:
         return []
 
+    # Score based on ingredient match count + nutritional similarity
     filtered_recipes['score'] = filtered_recipes.apply(
-        lambda row: np.dot(input_features, np.hstack([
-            vectorize_ingredients(row['ingredients_list'], ingredient_index_map),
-            scaler.transform([[row['calories'], row['fat'], row['carbohydrates'], row['protein'], row['cholesterol'], row['sodium'], row['fiber']]])[0]
-        ])), axis=1
+        lambda row: (
+            row['matching_count'] + 
+            np.dot(
+                input_nutri_scaled.flatten(),
+                scaler.transform([[row[col] for col in nutritional_columns]])[0]
+            )
+        ), axis=1
     )
 
+    # Sort and select top 5
     top_recipes = filtered_recipes.sort_values('score', ascending=False).head(5)
 
-    nutritional_columns = ['calories', 'fat', 'carbohydrates', 'protein', 'cholesterol', 'sodium', 'fiber']
     recommendations = []
     for _, row in top_recipes.iterrows():
         scaled_nutrition = [row[col] for col in nutritional_columns]
@@ -112,6 +126,9 @@ def recommend_recipes(input_ingredients, input_nutri, dataset, scaler, ingredien
             'ingredient_quantity_list': row['ingredient_quantity_list'],
             'nutrition': nutrition
         })
+
+    # Clean up temporary column
+    dataset.drop(columns=['matching_count'], inplace=True, errors='ignore')
 
     return recommendations
 
@@ -173,48 +190,46 @@ def extract_fact(message, answer):
     if quantities:
         facts["quantities"] = quantities
 
-    # You can add more custom extractions as needed
-
     return facts
+
+def check_domain_relevance(question):
+    """
+    Strict check: Only proceed if Pinecone returns relevant documents.
+    """
+    results = docsearch.similarity_search(question, k=2)
+    return len(results) > 0, results
+
 
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-
-from flask import Flask, request, jsonify, session
-from datetime import datetime
-import os
-
+    # Login logic here
 @app.route("/Postmessage", methods=["POST"])
 def chat():
     data = request.json
     msg = data.get("msg", "").strip()
-    user_id = data.get("user_id", "").strip()  # Use frontend-passed user_id
+    user_id = data.get("user_id", "").strip()
     username = data.get("username", "").strip()
 
-    if not msg:
-        return jsonify({"error": "No message provided"}), 400
-    if not user_id:
-        return jsonify({"error": "No user_id provided"}), 400
+    if not msg or not user_id:
+        return jsonify({"error": "Message and user_id are required"}), 400
 
-
-    # Load memory for this user
     memory = get_memory(user_id)
 
-    # Get last 20 chat messages for context
+    # Load recent chat history
     chat_logs = list(chat_collection.find({"user_id": user_id}).sort("timestamp", -1).limit(20))
     chat_history = [{"message": c["message"], "response": c["response"]} for c in chat_logs]
 
     related = is_follow_up(msg, chat_history)
-
     context_message = ""
+
     if related and chat_history:
         for chat in chat_history:
             if any(word in msg.lower() for word in chat["message"].lower().split()):
                 context_message = chat["message"]
                 break
 
-    # Formulate query to LLM
+    # Build complete query string
     if context_message:
         question = f"Based on earlier when I said '{context_message}', now {msg}"
     elif related:
@@ -222,27 +237,71 @@ def chat():
     else:
         question = f"Ignore previous conversation. {msg}"
 
-    # Get response from LLM
+    # Strict retrieval: only answer if docs contain real content
+    docs = retriever.get_relevant_documents(question)
+
+    def is_context_relevant(question, docs):
+        question_keywords = set(question.lower().split())
+        for doc in docs:
+            if not doc.page_content.strip():
+                continue
+            doc_words = set(doc.page_content.lower().split())
+            if question_keywords & doc_words:
+                return True
+        return False
+
+    if not docs or not is_context_relevant(question, docs):
+        answer = "I'm sorry, but I can only answer questions based on the medical book I was trained on. Please ask a medical question from the book."
+        chat_collection.insert_one({
+            "user_id": user_id,
+            "username": username,
+            "message": msg,
+            "response": answer,
+            "timestamp": datetime.utcnow(),
+            "is_relevant": False
+        })
+        return jsonify({
+            "message": answer,
+            "context_used": ""
+        })
+
+    # LLM prompt restricted to context only
+    system_prompt = (
+        "You are a medical question-answering assistant. "
+        "Use only the following retrieved medical book content to answer the user's question. "
+        "If the answer is not clearly present in the content, respond with: "
+        "'I'm sorry, I couldn't find the answer in the medical book.' "
+        "Keep your answer short and limited to a maximum of three sentences. "
+        "\n\n"
+        "{context}"
+    )
+
+    from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+    from langchain.chains import ConversationalRetrievalChain
+
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(system_prompt),
+        HumanMessagePromptTemplate.from_template("{question}")
+    ])
+
     qa_chain = ConversationalRetrievalChain.from_llm(
         llm=llm,
         retriever=retriever,
-        memory=memory
+        memory=memory,
+        combine_docs_chain_kwargs={"prompt": prompt}
     )
-    response = qa_chain.invoke({"question": question})
-    answer = response.get("answer", "Sorry, I couldn't find the answer.")
 
-    # Save to MongoDB
-    chat_document = {
+    response = qa_chain.invoke({"question": question})
+    answer = response.get("answer", "I'm sorry, I couldn't find the answer in the medical book.")
+
+    chat_collection.insert_one({
         "user_id": user_id,
         "username": username,
         "message": msg,
         "response": answer,
-        "timestamp": datetime.utcnow()
-    }
-    chat_collection.insert_one(chat_document)
-
-    # Optional fact extraction
-    facts = extract_fact(msg, answer)
+        "timestamp": datetime.utcnow(),
+        "is_relevant": True
+    })
 
     return jsonify({
         "message": answer,

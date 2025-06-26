@@ -7,7 +7,6 @@ import {
   useGetUsersQuery,
   useUpdateUserMutation,
 } from "../../redux/api/usersApiSlice";
-// import AdminMenu from "./AdminMenu";
 import { CheckCircle, X, Trash2, Edit2, Save, Mail } from "lucide-react";
 
 const UserList = () => {
@@ -18,6 +17,9 @@ const UserList = () => {
   const [editableUserId, setEditableUserId] = useState(null);
   const [editableUserName, setEditableUserName] = useState("");
   const [editableUserEmail, setEditableUserEmail] = useState("");
+  const [editableUserIsAdmin, setEditableUserIsAdmin] = useState(false);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
 
   const [updateUser] = useUpdateUserMutation();
 
@@ -43,35 +45,116 @@ const UserList = () => {
     }
   };
 
-  const toggleEdit = (id, username, email) => {
+  const toggleEdit = (id, username, email, isAdmin) => {
     setEditableUserId(id);
     setEditableUserName(username);
     setEditableUserEmail(email);
+    setEditableUserIsAdmin(isAdmin);
   };
 
   const cancelEdit = () => {
     setEditableUserId(null);
+    setUpdateError(null);
+    setUpdateLoading(false);
+  };
+
+  // Validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
   const updateHandler = async (id) => {
-    try {
-      const toastId = toast.loading("Updating user...");
-      await updateUser({
-        userId: id,
-        username: editableUserName,
-        email: editableUserEmail,
-      });
-      setEditableUserId(null);
-      refetch();
-      toast.update(toastId, {
-        render: "User updated successfully",
-        type: "success",
-        isLoading: false,
-        autoClose: 3000,
-      });
-    } catch (err) {
-      toast.error(err?.data?.message || err.error);
+    // Reset error state
+    setUpdateError(null);
+    
+    // Validate fields
+    if (!editableUserName || editableUserName.trim() === "") {
+      toast.error("Username cannot be empty");
+      setUpdateError("Username cannot be empty");
+      return;
     }
+    
+    if (!editableUserEmail || editableUserEmail.trim() === "") {
+      toast.error("Email cannot be empty");
+      setUpdateError("Email cannot be empty");
+      return;
+    }
+    
+    if (!isValidEmail(editableUserEmail)) {
+      toast.error("Please enter a valid email address");
+      setUpdateError("Please enter a valid email address");
+      return;
+    }
+    
+    setUpdateLoading(true);
+    const toastId = toast.loading("Updating user...");
+    
+    // Make sure the data structure matches what the API expects
+    // The backend expects the userId as part of the URL params and the user data in the body
+    const userData = {
+      // We're passing the userId both as the identifier for the URL and in the body
+      userId: id,
+      // Send the updated user data
+      username: editableUserName.trim(),
+      email: editableUserEmail.trim(),
+      // Preserve the isAdmin status
+      isAdmin: editableUserIsAdmin,
+    };
+    
+    // Call the updateUser mutation without unwrap()
+    updateUser(userData)
+      .then((response) => {
+        // Check if we have an error in the response
+        if (response.error) {
+          const errorMsg = response.error.data?.message || 
+                          response.error.data?.error || 
+                          response.error.error ||
+                          "Failed to update user";
+                          
+          setUpdateError(errorMsg);
+          toast.update(toastId, {
+            render: errorMsg,
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+          });
+          console.error("Update user error:", response.error);
+        } else {
+          // Success path
+          setEditableUserId(null);
+          setUpdateError(null);
+          
+          // Manually refetch to ensure we have the latest data
+          refetch();
+          
+          toast.update(toastId, {
+            render: "User updated successfully",
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+          });
+        }
+      })
+      .catch((err) => {
+        // This catch block handles unexpected errors
+        const errorMessage = err?.data?.message || 
+                            err?.message || 
+                            "An unexpected error occurred";
+        
+        setUpdateError(errorMessage);
+        toast.update(toastId, {
+          render: errorMessage,
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+        
+        console.error("Unexpected update error:", err);
+      })
+      .finally(() => {
+        setUpdateLoading(false);
+      });
   };
 
   return (
@@ -207,21 +290,46 @@ const UserList = () => {
 
                           <td className="px-4 py-3">
                             {editableUserId === user._id ? (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => updateHandler(user._id)}
-                                  className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-md transition-colors text-sm font-medium"
-                                >
-                                  <Save size={14} className="mr-1" />
-                                  Save
-                                </button>
-                                <button
-                                  onClick={cancelEdit}
-                                  className="inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors text-sm font-medium"
-                                >
-                                  <X size={14} className="mr-1" />
-                                  Cancel
-                                </button>
+                              <div className="flex flex-col space-y-2">
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => updateHandler(user._id)}
+                                    disabled={updateLoading}
+                                    className={`inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-md transition-colors text-sm font-medium ${
+                                      updateLoading ? 'opacity-70 cursor-not-allowed' : ''
+                                    }`}
+                                  >
+                                    {updateLoading ? (
+                                      <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Saving...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Save size={14} className="mr-1" />
+                                        Save
+                                      </>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={cancelEdit}
+                                    disabled={updateLoading}
+                                    className={`inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors text-sm font-medium ${
+                                      updateLoading ? 'opacity-70 cursor-not-allowed' : ''
+                                    }`}
+                                  >
+                                    <X size={14} className="mr-1" />
+                                    Cancel
+                                  </button>
+                                </div>
+                                {updateError && editableUserId === user._id && (
+                                  <div className="text-sm text-red-600">
+                                    {updateError}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <div className="flex space-x-2">
@@ -230,7 +338,8 @@ const UserList = () => {
                                     toggleEdit(
                                       user._id,
                                       user.username,
-                                      user.email
+                                      user.email,
+                                      user.isAdmin
                                     )
                                   }
                                   className="inline-flex items-center px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition-colors text-sm font-medium"

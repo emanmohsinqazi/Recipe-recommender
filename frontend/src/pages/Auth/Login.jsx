@@ -168,12 +168,12 @@ const Login = () => {
                     >
                       Password
                     </label>
-                    <Link
+                    {/* <Link
                       to="/forgot-password"
                       className="text-sm text-purple-600 hover:text-purple-800"
                     >
                       Forgot password?
-                    </Link>
+                    </Link> */}
                   </div>
                   <input
                     type="password"
