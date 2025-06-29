@@ -99,7 +99,7 @@ export default function FavoriteRecipes() {
   };
 
   const handleRecipeClick = (recipe) => {
-    navigate(`/recipe/${encodeURIComponent(recipe.recipe_name)}`, {
+    navigate(`/favoriterecipedetail/${encodeURIComponent(recipe.recipe_name)}`, {
       state: { recipe },
     });
   };

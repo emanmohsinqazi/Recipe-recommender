@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { Send, Mic, MicOff, Bot, User, ArrowDown, Trash2, Edit } from 'lucide-react';
+import { Send, Mic, MicOff, Bot, User, ArrowDown, Trash2 } from 'lucide-react';
 import { useSelector } from "react-redux";
 
 const Chatbot = () => {
   const [userInput, setUserInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isListening, setIsListening] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
   const [page, setPage] = useState(1);
   const [fetchedPages, setFetchedPages] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
@@ -82,16 +81,6 @@ const Chatbot = () => {
 
   const handleSend = async () => {
     if (!userInput.trim()) return;
-
-    if (editingIndex !== null) {
-      // For now, we won't implement editing as your backend doesn't support it
-      const updated = [...messages];
-      updated[editingIndex].content = userInput;
-      setMessages(updated);
-      setEditingIndex(null);
-      setUserInput("");
-      return;
-    }
 
     const newMessage = {
       role: "user",
@@ -189,11 +178,6 @@ const Chatbot = () => {
     setMessages(updated);
   };
 
-  const handleEdit = (index) => {
-    setEditingIndex(index);
-    setUserInput(messages[index].content);
-  };
-
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -249,12 +233,9 @@ const Chatbot = () => {
                   <div>{msg.content}</div>
                 </div>
 
-                {/* Edit/Delete only for user messages */}
+                {/* Only Delete for user messages */}
                 {msg.role === "user" && (
                   <div className="flex gap-2 text-xs mt-1 opacity-0 group-hover:opacity-100 transition">
-                    <button onClick={() => handleEdit(index)} className="text-blue-500 hover:underline flex items-center gap-1">
-                      <Edit size={14} /> Edit
-                    </button>
                     <button onClick={() => handleDelete(index)} className="text-red-500 hover:underline flex items-center gap-1">
                       <Trash2 size={14} /> Delete
                     </button>
@@ -274,7 +255,7 @@ const Chatbot = () => {
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={handleKeyPress}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none"
-            placeholder={editingIndex !== null ? "Edit your message..." : "Type your message..."}
+            placeholder="Type your message..."
             disabled={isLoading}
           />
           <button 

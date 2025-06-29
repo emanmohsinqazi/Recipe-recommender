@@ -1,163 +1,62 @@
-/* Modern Navigation Styles */
-
-/* Icon wrapper for consistent positioning */
-.icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+/* Ensure the nav items expand properly on hover */
+#navigation-container:hover .nav-item-name {
+  display: block;
 }
 
-/* Navigation indicator that appears on hover */
-.nav-indicator {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%) scaleY(0);
-  width: 3px;
-  height: 60%;
-  background: linear-gradient(to bottom, #bfdbfe, #e9d5ff);
-  border-radius: 0 4px 4px 0;
-  opacity: 0;
-  transition: all 0.2s ease;
-}
-
-/* Show indicator on hover */
-#navigation-container a:hover .nav-indicator {
-  transform: translateY(-50%) scaleY(1);
-  opacity: 1;
+/* Smooth transition for nav items */
+.nav-item-name {
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Cart badge styling */
 .cart-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  height: 16px;
-  width: 16px;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
   border-radius: 50%;
-  background: linear-gradient(to right, #bfdbfe, #e9d5ff);
-  color: #4b5563;
+  width: 18px;
+  height: 18px;
   font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Make the nav-item-name visible on sidebar hover */
-#navigation-container:hover .nav-item-name {
-  display: block;
-}
-
-/* User profile button styling */
-.user-profile-button {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-
-.user-profile-button:hover {
-  background-color: #f9fafb;
-}
-
-/* User avatar styling */
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #bfdbfe, #e9d5ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  color: #4b5563;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  margin-right: 8px;
-}
-
-/* User dropdown styling */
-.user-dropdown {
+/* Active indicator animation */
+.nav-indicator {
   position: absolute;
-  bottom: 100%;
   right: 0;
-  margin-bottom: 8px;
-  width: 180px;
-  border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(229, 231, 235, 0.5);
-  overflow: hidden;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 4px 0 0 4px;
+  transition: height 0.3s ease;
+}
+
+/* Show indicator on active/hover */
+.active .nav-indicator,
+.nav-link:hover .nav-indicator {
+  height: 24px;
+}
+
+/* Ensure proper z-index for dropdown */
+.dropdown-menu {
   z-index: 50;
-  animation: slideIn 0.2s ease-out forwards;
 }
 
-/* Dropdown item styling */
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  font-size: 14px;
-  color: #4b5563;
-  transition: all 0.15s ease;
+/* Mobile menu transition */
+.mobile-menu {
+  transition: transform 0.3s ease-in-out;
 }
 
-.dropdown-item:hover {
-  background-color: #f9fafb;
-  color: #3b82f6;
-}
-
-/* Animation for dropdown */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Hover effect for navigation items */
-#navigation-container a:hover .icon-wrapper {
-  background-color: #f3f4f6;
-  transform: translateX(2px);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #bfdbfe, #e9d5ff);
-  border-radius: 10px;
-}
-
-/* Active link styling */
-#navigation-container a.active .nav-indicator {
-  transform: translateY(-50%) scaleY(1);
-  opacity: 1;
-}
-
-#navigation-container a.active .icon-wrapper {
-  background-color: #f3f4f6;
-}
-
-#navigation-container a.active {
-  font-weight: 500;
+/* Prevent body scroll when mobile menu is open */
+.body-no-scroll {
+  overflow: hidden;
 }

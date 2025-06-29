@@ -148,7 +148,7 @@ const Shop = () => {
                       : "text-gray-600 hover:text-purple-500"
                   }`}
                 >
-                  <DollarSign className="mr-2" size={16} />
+                  {/* <DollarSign className="mr-2" size={16} /> */}
                   Price
                 </button>
               </div>

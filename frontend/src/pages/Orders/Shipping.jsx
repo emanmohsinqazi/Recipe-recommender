@@ -1,84 +1,101 @@
-"use client"
-
-import { useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import { saveShippingAddress, savePaymentMethod } from "../../redux/features/cart/cartSlice"
-import ProgressSteps from "../../components/ProgressSteps"
-import { toast } from "react-toastify"
-import { FaMapMarkerAlt, FaCity, FaMailBulk, FaGlobe, FaCreditCard, FaArrowRight } from "react-icons/fa"
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  saveShippingAddress,
+  savePaymentMethod,
+} from "../../redux/features/cart/cartSlice";
+import ProgressSteps from "../../components/ProgressSteps";
+import { toast } from "react-toastify";
+import {
+  FaMapMarkerAlt,
+  FaCity,
+  FaMailBulk,
+  FaGlobe,
+  FaCreditCard,
+  FaArrowRight,
+} from "react-icons/fa";
 
 const Shipping = () => {
-  const cart = useSelector((state) => state.cart)
-  const { shippingAddress } = cart
+  const cart = useSelector((state) => state.cart);
+  const { shippingAddress } = cart;
 
-  const [paymentMethod, setPaymentMethod] = useState("Credit Card")
-  const [address, setAddress] = useState(shippingAddress.address || "")
-  const [city, setCity] = useState(shippingAddress.city || "")
-  const [postalCode, setPostalCode] = useState(shippingAddress.postalCode || "")
-  const [country, setCountry] = useState(shippingAddress.country || "")
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState("Credit Card");
+  const [address, setAddress] = useState(shippingAddress.address || "");
+  const [city, setCity] = useState(shippingAddress.city || "");
+  const [postalCode, setPostalCode] = useState(
+    shippingAddress.postalCode || ""
+  );
+  const [country, setCountry] = useState(shippingAddress.country || "");
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Validate the form fields
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors = {};
 
-    if (!address.trim()) newErrors.address = "Address is required"
-    if (!city.trim()) newErrors.city = "City is required"
-    if (!postalCode.trim()) newErrors.postalCode = "Postal code is required"
-    if (!country.trim()) newErrors.country = "Country is required"
+    if (!address.trim()) newErrors.address = "Address is required";
+    if (!city.trim()) newErrors.city = "City is required";
+    if (!postalCode.trim()) newErrors.postalCode = "Postal code is required";
+    if (!country.trim()) newErrors.country = "Country is required";
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0
-  }
+    return Object.keys(newErrors).length === 0;
+  };
 
   const submitHandler = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate form before submission
     if (!validateForm()) {
-      toast.error("Please fill in all required fields")
-      return
+      toast.error("Please fill in all required fields");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       // Save shipping address and payment method to state
-      dispatch(saveShippingAddress({ address, city, postalCode, country }))
-      dispatch(savePaymentMethod(paymentMethod))
+      dispatch(saveShippingAddress({ address, city, postalCode, country }));
+      dispatch(savePaymentMethod(paymentMethod));
 
       // Show success message
-      toast.success("Shipping information saved")
+      toast.success("Shipping information saved");
 
       // Navigate to checkout page
-      navigate("/checkout")
+      navigate("/checkout");
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Something went wrong. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+    <div
+      className="min-h-screen py-8 px-4"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
       <div className="container mx-auto max-w-4xl">
         <ProgressSteps step1 step2 />
 
         <div className="mt-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Shipping Information</h1>
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">
+              Shipping Information
+            </h1>
 
             <form onSubmit={submitHandler}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Address Field */}
                 <div className="md:col-span-2">
-                  <label className="block text-gray-700 font-medium mb-2">Address</label>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Address
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FaMapMarkerAlt className="text-indigo-500" />
@@ -93,12 +110,18 @@ const Shipping = () => {
                       onChange={(e) => setAddress(e.target.value)}
                     />
                   </div>
-                  {errors.address && <p className="mt-1 text-red-500 text-sm">{errors.address}</p>}
+                  {errors.address && (
+                    <p className="mt-1 text-red-500 text-sm">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
 
                 {/* City Field */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">City</label>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    City
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FaCity className="text-indigo-500" />
@@ -113,12 +136,16 @@ const Shipping = () => {
                       onChange={(e) => setCity(e.target.value)}
                     />
                   </div>
-                  {errors.city && <p className="mt-1 text-red-500 text-sm">{errors.city}</p>}
+                  {errors.city && (
+                    <p className="mt-1 text-red-500 text-sm">{errors.city}</p>
+                  )}
                 </div>
 
                 {/* Postal Code Field */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">Postal Code</label>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Postal Code
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FaMailBulk className="text-indigo-500" />
@@ -133,12 +160,18 @@ const Shipping = () => {
                       onChange={(e) => setPostalCode(e.target.value)}
                     />
                   </div>
-                  {errors.postalCode && <p className="mt-1 text-red-500 text-sm">{errors.postalCode}</p>}
+                  {errors.postalCode && (
+                    <p className="mt-1 text-red-500 text-sm">
+                      {errors.postalCode}
+                    </p>
+                  )}
                 </div>
 
                 {/* Country Field */}
                 <div>
-                  <label className="block text-gray-700 font-medium mb-2">Country</label>
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Country
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FaGlobe className="text-indigo-500" />
@@ -153,13 +186,19 @@ const Shipping = () => {
                       onChange={(e) => setCountry(e.target.value)}
                     />
                   </div>
-                  {errors.country && <p className="mt-1 text-red-500 text-sm">{errors.country}</p>}
+                  {errors.country && (
+                    <p className="mt-1 text-red-500 text-sm">
+                      {errors.country}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Payment Method Section */}
               <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4 text-gray-800">Payment Method</h2>
+                <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                  Payment Method
+                </h2>
                 <div className="bg-white/50 border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center space-x-3">
                     <input
@@ -171,7 +210,10 @@ const Shipping = () => {
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300"
                     />
-                    <label htmlFor="creditCard" className="flex items-center cursor-pointer">
+                    <label
+                      htmlFor="creditCard"
+                      className="flex items-center cursor-pointer"
+                    >
                       <FaCreditCard className="text-indigo-600 mr-2" />
                       <span className="text-gray-800">Credit Card</span>
                     </label>
@@ -220,7 +262,7 @@ const Shipping = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Shipping
+export default Shipping;

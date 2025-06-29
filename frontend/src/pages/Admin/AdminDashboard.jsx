@@ -1,24 +1,27 @@
-import Chart from "react-apexcharts"
-import { useGetUsersQuery } from "../../redux/api/usersApiSlice"
+import Chart from "react-apexcharts";
+import { useGetUsersQuery } from "../../redux/api/usersApiSlice";
 import {
   useGetTotalOrdersQuery,
   useGetTotalSalesByDateQuery,
   useGetTotalSalesQuery,
-} from "../../redux/api/orderApiSlice"
+} from "../../redux/api/orderApiSlice";
 
-import { useState, useEffect } from "react"
-import Loader from "../../components/Loader"
-import { DollarSign, Users, ShoppingBag, BarChart2 } from "lucide-react"
-import { useGetOrdersQuery, useDeliverOrderMutation } from "../../redux/api/orderApiSlice"
-import { toast } from "react-toastify"
-import { CheckCircle, Clock, Eye, CheckSquare } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react";
+import Loader from "../../components/Loader";
+import { DollarSign, Users, ShoppingBag, BarChart2 } from "lucide-react";
+import {
+  useGetOrdersQuery,
+  useDeliverOrderMutation,
+} from "../../redux/api/orderApiSlice";
+import { toast } from "react-toastify";
+import { CheckCircle, Clock, Eye, CheckSquare } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AdminDashboard = () => {
-  const { data: sales, isLoading } = useGetTotalSalesQuery()
-  const { data: customers, isLoading: loading } = useGetUsersQuery()
-  const { data: orders, isLoading: loadingTwo } = useGetTotalOrdersQuery()
-  const { data: salesDetail } = useGetTotalSalesByDateQuery()
+  const { data: sales, isLoading } = useGetTotalSalesQuery();
+  const { data: customers, isLoading: loading } = useGetUsersQuery();
+  const { data: orders, isLoading: loadingTwo } = useGetTotalOrdersQuery();
+  const { data: salesDetail } = useGetTotalSalesByDateQuery();
 
   // For OrderList functionality
   const {
@@ -31,34 +34,35 @@ const AdminDashboard = () => {
     {
       pollingInterval: 15000,
       refetchOnMountOrArgChange: true,
-    },
-  )
-  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation()
+    }
+  );
+  const [deliverOrder, { isLoading: loadingDeliver }] =
+    useDeliverOrderMutation();
 
   const confirmOrderHandler = async (orderId) => {
-    const toastId = toast.loading("Confirming order...")
+    const toastId = toast.loading("Confirming order...");
 
     try {
-      await deliverOrder(orderId).unwrap()
-      await refetch()
+      await deliverOrder(orderId).unwrap();
+      await refetch();
       toast.update(toastId, {
         render: "Order confirmed successfully",
         type: "success",
         isLoading: false,
         autoClose: 3000,
-      })
+      });
       setTimeout(() => {
-        refetch()
-      }, 2000)
+        refetch();
+      }, 2000);
     } catch (err) {
       toast.update(toastId, {
         render: err?.data?.message || "Failed to confirm order",
         type: "error",
         isLoading: false,
         autoClose: 5000,
-      })
+      });
     }
-  }
+  };
 
   const [state, setState] = useState({
     options: {
@@ -158,14 +162,14 @@ const AdminDashboard = () => {
       },
     },
     series: [{ name: "Sales", data: [] }],
-  })
+  });
 
   useEffect(() => {
     if (salesDetail) {
       const formattedSalesDate = salesDetail.map((item) => ({
         x: item._id,
         y: item.totalSales,
-      }))
+      }));
 
       setState((prevState) => ({
         ...prevState,
@@ -177,13 +181,18 @@ const AdminDashboard = () => {
           },
         },
 
-        series: [{ name: "Sales", data: formattedSalesDate.map((item) => item.y) }],
-      }))
+        series: [
+          { name: "Sales", data: formattedSalesDate.map((item) => item.y) },
+        ],
+      }));
     }
-  }, [salesDetail])
+  }, [salesDetail]);
 
   return (
-    <div className="min-h-screen py-6" style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}>
+    <div
+      className="min-h-screen py-6"
+      style={{ background: "linear-gradient(to right, #bfdbfe, #e9d5ff)" }}
+    >
       <div className="container mx-auto pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 flex items-center">
@@ -202,7 +211,11 @@ const AdminDashboard = () => {
               <div>
                 <p className="text-gray-600 font-medium">Total Sales</p>
                 <h1 className="text-2xl font-bold text-gray-800">
-                  {isLoading ? <Loader /> : `$${sales?.totalSales?.toFixed(2) || "0.00"}`}
+                  {isLoading ? (
+                    <Loader />
+                  ) : (
+                    `$${sales?.totalSales?.toFixed(2) || "0.00"}`
+                  )}
                 </h1>
               </div>
             </div>
@@ -216,7 +229,9 @@ const AdminDashboard = () => {
               </div>
               <div>
                 <p className="text-gray-600 font-medium">Total Customers</p>
-                <h1 className="text-2xl font-bold text-gray-800">{loading ? <Loader /> : customers?.length || 0}</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {loading ? <Loader /> : customers?.length || 0}
+                </h1>
               </div>
             </div>
           </div>
@@ -234,30 +249,6 @@ const AdminDashboard = () => {
                 </h1>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Chart Section */}
-        <div className="mb-8 bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2 text-purple-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
-              />
-            </svg>
-            Sales Analytics
-          </h2>
-          <div className="w-full">
-            <Chart options={state.options} series={state.series} type="bar" height={350} />
           </div>
         </div>
 
@@ -328,19 +319,25 @@ const AdminDashboard = () => {
                       <tr key={order._id} className="hover:bg-gray-50">
                         <td className="px-4 py-4 whitespace-nowrap">
                           <img
-                            src={order.orderItems[0].image || "/placeholder.svg"}
+                            src={
+                              order.orderItems[0].image || "/placeholder.svg"
+                            }
                             alt={order._id}
                             className="w-16 h-16 object-cover rounded-md"
                           />
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                          <span className="truncate max-w-[100px] inline-block">{order._id}</span>
+                          <span className="truncate max-w-[100px] inline-block">
+                            {order._id}
+                          </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                           {order.user ? order.user.username : "N/A"}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
+                          {order.createdAt
+                            ? order.createdAt.substring(0, 10)
+                            : "N/A"}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           ${order.totalPrice.toFixed(2)}
@@ -359,7 +356,8 @@ const AdminDashboard = () => {
                         <td className="px-4 py-4 whitespace-nowrap">
                           {order.isDelivered ? (
                             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              <CheckCircle size={14} className="mr-1" /> Delivered
+                              <CheckCircle size={14} className="mr-1" />{" "}
+                              Delivered
                             </span>
                           ) : (
                             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
@@ -415,7 +413,12 @@ const AdminDashboard = () => {
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </Link>
               </div>
@@ -424,7 +427,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AdminDashboard
+export default AdminDashboard;

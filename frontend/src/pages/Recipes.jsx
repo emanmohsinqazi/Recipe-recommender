@@ -1,29 +1,80 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { Heart, Search, ChevronDown, X, Loader2, ChefHat } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { useToggleFavoriteMutation, useGetFavoritesQuery } from "../redux/api/favoriteApiSlice";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Heart, Search, ChevronDown, X, Loader2, ChefHat } from "lucide-react";
+import { toast } from "react-toastify";
+import {
+  useToggleFavoriteMutation,
+  useGetFavoritesQuery,
+} from "../redux/api/favoriteApiSlice";
+
+// Local storage keys
+const STORAGE_KEYS = {
+  RECIPES: "recipeRecommender_recipes",
+  INGREDIENTS: "recipeRecommender_ingredients",
+  NUTRITION: "recipeRecommender_nutrition",
+};
 
 export default function Recipes() {
   const navigate = useNavigate();
-  const [recipes, setRecipes] = useState([]);
-  const [ingredients, setIngredients] = useState("");
+  const location = useLocation();
+  
+  // Initialize state from local storage or location state
+  const [recipes, setRecipes] = useState(() => {
+    // First check if we have state from navigation
+    if (location.state?.recipes) {
+      return location.state.recipes;
+    }
+    // Then check local storage
+    const savedRecipes = localStorage.getItem(STORAGE_KEYS.RECIPES);
+    return savedRecipes ? JSON.parse(savedRecipes) : [];
+  });
+  
+  const [ingredients, setIngredients] = useState(() => {
+    if (location.state?.ingredients) {
+      return location.state.ingredients;
+    }
+    const savedIngredients = localStorage.getItem(STORAGE_KEYS.INGREDIENTS);
+    return savedIngredients || "";
+  });
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedSection, setExpandedSection] = useState(null);
   const [toggleFavorite] = useToggleFavoriteMutation();
-  const { data: favorites = [], refetch: refetchFavorites } = useGetFavoritesQuery();
+  const { data: favorites = [], refetch: refetchFavorites } =
+    useGetFavoritesQuery();
 
-  const [nutrition, setNutrition] = useState({
-    calories: "",
-    fat: "",
-    carbohydrates: "",
-    protein: "",
-    cholesterol: "",
-    sodium: "",
-    fiber: "",
+  const [nutrition, setNutrition] = useState(() => {
+    if (location.state?.nutrition) {
+      return location.state.nutrition;
+    }
+    const savedNutrition = localStorage.getItem(STORAGE_KEYS.NUTRITION);
+    return savedNutrition
+      ? JSON.parse(savedNutrition)
+      : {
+          calories: "",
+          fat: "",
+          carbohydrates: "",
+          protein: "",
+          cholesterol: "",
+          sodium: "",
+          fiber: "",
+        };
   });
+
+  // Save data to local storage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.RECIPES, JSON.stringify(recipes));
+  }, [recipes]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.INGREDIENTS, ingredients);
+  }, [ingredients]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.NUTRITION, JSON.stringify(nutrition));
+  }, [nutrition]);
 
   const nutritionFields = [
     { key: "calories", label: "Calories", unit: "kcal" },
@@ -37,10 +88,29 @@ export default function Recipes() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Check if input contains only numbers or is empty
+    if (value !== "" && !/^\d*$/.test(value)) {
+      toast.error(
+        `${
+          name.charAt(0).toUpperCase() + name.slice(1)
+        } must contain only numbers`
+      );
+      alert(
+        `Please enter only numbers for ${
+          name.charAt(0).toUpperCase() + name.slice(1)
+        }`
+      );
+      return;
+    }
+
     const numValue = Number(value);
 
+    // Check if the value is negative
     if (numValue < 0) {
-      toast.warning(`${name.charAt(0).toUpperCase() + name.slice(1)} can't be negative`);
+      toast.warning(
+        `${name.charAt(0).toUpperCase() + name.slice(1)} can't be negative`
+      );
       return;
     }
 
@@ -59,7 +129,9 @@ export default function Recipes() {
     if (isValid) {
       setIngredients(value);
     } else {
-      toast.warn("Ingredients should contain only letters, commas, and spaces.");
+      toast.warn(
+        "Ingredients should contain only letters, commas, and spaces."
+      );
     }
   };
 
@@ -74,7 +146,10 @@ export default function Recipes() {
         return;
       }
 
-      const inputIngredients = ingredients.split(",").map((item) => item.trim()).filter(Boolean);
+      const inputIngredients = ingredients
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
       const response = await axios.post("http://127.0.0.1:5000/api/recommend", {
         ingredients: inputIngredients,
@@ -90,8 +165,16 @@ export default function Recipes() {
   };
 
   const handleRecipeClick = (recipe) => {
+    // Save current state before navigating
     navigate(`/recipe/${encodeURIComponent(recipe.recipe_name)}`, {
-      state: { recipe },
+      state: { 
+        recipe,
+        returnState: {
+          recipes,
+          ingredients,
+          nutrition
+        }
+      },
     });
   };
 
@@ -102,10 +185,10 @@ export default function Recipes() {
     try {
       const recipeData = {
         recipe_name: recipe.recipe_name,
-        image_url: recipe.image_url || '',
-        ingredients: recipe.ingredients || [],
-        calories: recipe.calories || 0,
-        instructions: recipe.instructions || [],
+        image_url: recipe.image_url || "",
+        ingredients: recipe.ingredients_list || [],
+        calories: recipe.nutrition?.calories || 0,
+        instructions: recipe.ingredient_quantity_list || [],
         nutrition: {
           protein: recipe.nutrition?.protein || 0,
           carbohydrates: recipe.nutrition?.carbohydrates || 0,
@@ -135,6 +218,11 @@ export default function Recipes() {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  const clearRecipes = () => {
+    setRecipes([]);
+    localStorage.removeItem(STORAGE_KEYS.RECIPES);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-10">
@@ -142,7 +230,8 @@ export default function Recipes() {
           Recipe Recommender
         </h1>
         <p className="text-gray-700 max-w-2xl mx-auto">
-          Enter your ingredients and nutritional preferences to discover delicious recipes tailored just for you
+          Enter your ingredients and nutritional preferences to discover
+          delicious recipes tailored just for you
         </p>
       </div>
 
@@ -176,7 +265,9 @@ export default function Recipes() {
                 <span>Nutritional Requirements</span>
                 <ChevronDown
                   className={`h-5 w-5 text-purple-500 transition-transform ${
-                    expandedSection === "nutrition" ? "transform rotate-180" : ""
+                    expandedSection === "nutrition"
+                      ? "transform rotate-180"
+                      : ""
                   }`}
                 />
               </button>
@@ -195,6 +286,7 @@ export default function Recipes() {
                         onChange={handleInputChange}
                         className="border border-gray-200 p-3 w-full rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
                         placeholder={`e.g. 200`}
+                        min="0"
                       />
                     </div>
                   ))}
@@ -220,9 +312,22 @@ export default function Recipes() {
         </div>
 
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
-            {recipes.length > 0 ? "Recommended Recipes" : "Your Recommendations"}
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">
+              {recipes.length > 0
+                ? "Recommended Recipes"
+                : "Your Recommendations"}
+            </h2>
+            {recipes.length > 0 && (
+              <button
+                onClick={clearRecipes}
+                className="text-sm text-gray-500 hover:text-red-500 flex items-center"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Results
+              </button>
+            )}
+          </div>
 
           {error && (
             <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-lg max-w-3xl mx-auto">
@@ -236,7 +341,9 @@ export default function Recipes() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="animate-spin h-12 w-12 text-purple-600 mb-4" />
-              <p className="text-gray-600">Finding the perfect recipes for you...</p>
+              <p className="text-gray-600">
+                Finding the perfect recipes for you...
+              </p>
             </div>
           ) : recipes.length === 0 ? (
             <div className="bg-white/50 backdrop-blur-sm p-8 rounded-xl text-center max-w-3xl mx-auto">
@@ -247,7 +354,8 @@ export default function Recipes() {
                 No recommendations available yet.
               </p>
               <p className="text-gray-500">
-                Enter your ingredients and nutritional preferences to get personalized recipe recommendations.
+                Enter your ingredients and nutritional preferences to get
+                personalized recipe recommendations.
               </p>
             </div>
           ) : (
@@ -280,7 +388,9 @@ export default function Recipes() {
                     >
                       <Heart
                         className={`h-5 w-5 ${
-                          favorites.some((fav) => fav.recipe_name === recipe.recipe_name)
+                          favorites.some(
+                            (fav) => fav.recipe_name === recipe.recipe_name
+                          )
                             ? "text-red-500 fill-red-500"
                             : "text-gray-400"
                         }`}

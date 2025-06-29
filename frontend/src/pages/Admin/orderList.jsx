@@ -1,11 +1,12 @@
-"use client"
-
-import Message from "../../components/Message"
-import Loader from "../../components/Loader"
-import { Link } from "react-router-dom"
-import { useGetOrdersQuery, useDeliverOrderMutation } from "../../redux/api/orderApiSlice"
-import { toast } from "react-toastify"
-import { CheckCircle, Clock, Eye, CheckSquare } from "lucide-react"
+import Message from "../../components/Message";
+import Loader from "../../components/Loader";
+import { Link } from "react-router-dom";
+import {
+  useGetOrdersQuery,
+  useDeliverOrderMutation,
+} from "../../redux/api/orderApiSlice";
+import { toast } from "react-toastify";
+import { CheckCircle, Clock, Eye, CheckSquare } from "lucide-react";
 
 const OrderList = () => {
   const {
@@ -19,20 +20,21 @@ const OrderList = () => {
       // Polling interval for real-time updates (every 15 seconds)
       pollingInterval: 15000,
       refetchOnMountOrArgChange: true,
-    },
-  )
-  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation()
+    }
+  );
+  const [deliverOrder, { isLoading: loadingDeliver }] =
+    useDeliverOrderMutation();
 
   const confirmOrderHandler = async (orderId) => {
     // Show loading toast
-    const toastId = toast.loading("Confirming order...")
+    const toastId = toast.loading("Confirming order...");
 
     try {
       // Mark the order as delivered
-      await deliverOrder(orderId).unwrap()
+      await deliverOrder(orderId).unwrap();
 
       // Immediate refetch to update the UI
-      await refetch()
+      await refetch();
 
       // Update toast to success
       toast.update(toastId, {
@@ -40,12 +42,12 @@ const OrderList = () => {
         type: "success",
         isLoading: false,
         autoClose: 3000,
-      })
+      });
 
       // Force another refetch after a delay to ensure data is completely synchronized
       setTimeout(() => {
-        refetch()
-      }, 2000)
+        refetch();
+      }, 2000);
     } catch (err) {
       // Update toast to show error
       toast.update(toastId, {
@@ -53,17 +55,22 @@ const OrderList = () => {
         type: "error",
         isLoading: false,
         autoClose: 5000,
-      })
+      });
     }
-  }
+  };
 
-  if (isLoading) return <Loader />
-  if (error) return <Message variant="error">{error?.data?.message || error.error}</Message>
+  if (isLoading) return <Loader />;
+  if (error)
+    return (
+      <Message variant="error">{error?.data?.message || error.error}</Message>
+    );
 
   return (
     <div className="w-full pl-[5%] md:pl-[6%] lg:pl-[8%] xl:pl-[16%] pr-4 py-6">
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold mb-6 text-gray-800">Order Management</h2>
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">
+          Order Management
+        </h2>
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -72,13 +79,21 @@ const OrderList = () => {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Items
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">User</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  User
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Date
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Total
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Paid</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  Paid
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   Delivered
                 </th>
@@ -99,7 +114,9 @@ const OrderList = () => {
                     />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
-                    <span className="truncate max-w-[100px] inline-block">{order._id}</span>
+                    <span className="truncate max-w-[100px] inline-block">
+                      {order._id}
+                    </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                     {order.user ? order.user.username : "N/A"}
@@ -162,7 +179,7 @@ const OrderList = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OrderList
+export default OrderList;

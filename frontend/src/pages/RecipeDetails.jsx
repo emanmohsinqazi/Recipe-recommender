@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Clock,
   Utensils,
@@ -10,7 +10,16 @@ import {
 
 function RecipeDetails() {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const recipe = state?.recipe;
+  const returnState = state?.returnState;
+
+  const handleGoBack = () => {
+    // Navigate back with the saved state if available
+    navigate('/recipes', { 
+      state: returnState
+    });
+  };
 
   if (!recipe) {
     return (
@@ -27,7 +36,7 @@ function RecipeDetails() {
             The recipe details you're looking for are not available.
           </p>
           <button
-            onClick={() => window.history.back()}
+            onClick={handleGoBack}
             className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-300"
           >
             <ChevronLeft className="inline-block mr-2 h-4 w-4" />
@@ -61,7 +70,7 @@ function RecipeDetails() {
         {/* Navigation */}
         <div className="mb-6">
           <button
-            onClick={() => window.history.back()}
+            onClick={handleGoBack}
             className="flex items-center text-gray-700 hover:text-purple-700 transition-colors"
           >
             <ChevronLeft className="h-5 w-5 mr-1" />

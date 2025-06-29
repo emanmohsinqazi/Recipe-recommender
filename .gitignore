@@ -70,4 +70,13 @@ Thumbs.db
 dist/
 build/
 
+
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pydvenv/
+venv/
 allfiles.txt
+

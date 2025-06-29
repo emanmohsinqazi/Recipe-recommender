@@ -12,7 +12,7 @@ import {
 } from '../redux/api/inventoryApiSlice';
 
 const units = ['kg', 'L', 'pcs', 'g'];
-const categories = ['ingredients', 'fruits', 'vegetables', 'dairy'];
+const categories = ['ingredients', 'fruits', 'vegetables', 'dairy', 'meat', 'grains', 'spices'];
 
 function Kitchen() {
   // Local state for UI controls
@@ -274,7 +274,7 @@ function Kitchen() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                 <select
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-4 py-3 bg-white border text-gray-700 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                   value={newItem.category}
                   onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                 >
@@ -298,7 +298,7 @@ function Kitchen() {
                     required
                   />
                   <select
-                    className="px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="px-4 py-3 text-black bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
                     value={newItem.unit}
                     onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
                   >

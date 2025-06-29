@@ -1,17 +1,12 @@
 import asyncHandler from '../middlewares/asyncHandler.js';
 import FavoriteRecipe from '../models/favoriteRecipeModel.js';
 
-// @desc    Get user's favorite recipes
-// @route   GET /api/favorites
-// @access  Private
+
 const getFavorites = asyncHandler(async (req, res) => {
   const favorites = await FavoriteRecipe.find({ user: req.user._id });
   res.json(favorites);
 });
 
-// @desc    Add a recipe to favorites
-// @route   POST /api/favorites
-// @access  Private
 const addFavorite = asyncHandler(async (req, res) => {
   const {
     recipe_name,
@@ -45,9 +40,7 @@ const addFavorite = asyncHandler(async (req, res) => {
   res.status(201).json(favorite);
 });
 
-// @desc    Remove a recipe from favorites
-// @route   DELETE /api/favorites/:recipe_name
-// @access  Private
+
 const removeFavorite = asyncHandler(async (req, res) => {
   // Decode the URL-encoded recipe name
   const recipe_name = decodeURIComponent(req.params.recipe_name);
@@ -74,7 +67,7 @@ const removeFavorite = asyncHandler(async (req, res) => {
 
     console.log(`Found favorite: ${favorite._id}`);
 
-    // Use deleteOne instead of remove (which is deprecated)
+   
     const result = await FavoriteRecipe.deleteOne({
       _id: favorite._id
     });
@@ -104,9 +97,7 @@ const removeFavorite = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Toggle favorite status of a recipe
-// @route   POST /api/favorites/toggle
-// @access  Private
+
 const toggleFavorite = asyncHandler(async (req, res) => {
   const {
     recipe_name,
@@ -124,7 +115,7 @@ const toggleFavorite = asyncHandler(async (req, res) => {
     });
 
     if (existingFavorite) {
-      // Use deleteOne instead of remove (which is deprecated)
+    
       const result = await FavoriteRecipe.deleteOne({ _id: existingFavorite._id });
       if (result.deletedCount === 1) {
         res.json({ 
@@ -164,9 +155,7 @@ const toggleFavorite = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Check if a recipe is favorited
-// @route   GET /api/favorites/check/:recipe_name
-// @access  Private
+
 const checkFavorite = asyncHandler(async (req, res) => {
   // Decode the URL-encoded recipe name
   const recipe_name = decodeURIComponent(req.params.recipe_name);
