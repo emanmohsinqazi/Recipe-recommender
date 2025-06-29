@@ -69,3 +69,5 @@ Thumbs.db
 # Build directory
 dist/
 build/
+
+allfiles.txt
