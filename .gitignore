@@ -80,3 +80,12 @@ __pycache__/
 venv/
 allfiles.txt
 
+
+=======
+# Python Virtual Environment (inside frontend/HealthChatBot)
+Ai/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pydvenv/
+venv/
