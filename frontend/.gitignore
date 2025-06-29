@@ -7,15 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
 *.local
 
-# Editor directories and files
-.vscode/*
+# Editor settings
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -23,4 +26,8 @@ dist-ssr
 *.sln
 *.sw?
 
+
 venv/
+=======
+# Python Virtual Environment (inside frontend/HealthChatBot)
+HealthChatBot/venv/
