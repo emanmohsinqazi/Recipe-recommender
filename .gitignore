@@ -77,3 +77,5 @@ __pycache__/
 *.pyo
 *.pydvenv/
 venv/
+
+allfiles.txt
